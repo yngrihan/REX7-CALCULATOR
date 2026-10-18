@@ -29,8 +29,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var lcdBorderLayout: LinearLayout
     private lateinit var lcdScreen: LinearLayout
     private lateinit var scrollExpression: HorizontalScrollView
+    private lateinit var expressionContainer: LinearLayout
     private lateinit var tvBrand: TextView
     private lateinit var tvLcdClock: TextView
+    private lateinit var btnCopy: TextView
     private lateinit var tvExpression: TextView
     private lateinit var cursorBar: View
     private lateinit var tvResult: TextView
@@ -40,6 +42,7 @@ class MainActivity : AppCompatActivity() {
     private val allButtons = mutableListOf<AppCompatButton>()
     private val currentInput = StringBuilder(256)
     private var isEvaluated = false
+    private var lastFullExpression = ""
     private val bgExecutor = Executors.newSingleThreadExecutor()
 
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -65,8 +68,10 @@ class MainActivity : AppCompatActivity() {
         lcdBorderLayout = findViewById(R.id.lcdBorderLayout)
         lcdScreen = findViewById(R.id.lcdScreen)
         scrollExpression = findViewById(R.id.scrollExpression)
+        expressionContainer = findViewById(R.id.expressionContainer)
         tvBrand = findViewById(R.id.tvBrand)
         tvLcdClock = findViewById(R.id.tvLcdClock)
+        btnCopy = findViewById(R.id.btnCopy)
         tvExpression = findViewById(R.id.tvExpression)
         cursorBar = findViewById(R.id.cursorBar)
         tvResult = findViewById(R.id.tvResult)
@@ -141,16 +146,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupClipboard() {
-        tvExpression.setOnClickListener {
-            val text = tvExpression.text.toString().trim()
-            if (isEvaluated && text.isNotEmpty() && text != "Error") {
+        // 1. COPY BUTTON: Pura calculation copy karega (e.g. 5+5+6-6+93 = 103)
+        btnCopy.setOnClickListener {
+            val textToCopy = if (isEvaluated && lastFullExpression.isNotEmpty()) {
+                lastFullExpression
+            } else if (currentInput.isNotEmpty()) {
+                currentInput.toString()
+            } else {
+                ""
+            }
+
+            if (textToCopy.isNotEmpty()) {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
-                Toast.makeText(this, "Copied: $text", Toast.LENGTH_SHORT).show()
+                clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Calculation", textToCopy))
+                Toast.makeText(this, "Copied: $textToCopy", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Nothing to copy", Toast.LENGTH_SHORT).show()
             }
         }
 
-        lcdScreen.setOnLongClickListener {
+        // 2. PASTE: Expression, Cursor ya Screen par hold (long press) karke paste
+        val pasteListener = View.OnLongClickListener {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = clipboard.primaryClip
             if (clip != null && clip.itemCount > 0) {
@@ -165,11 +181,18 @@ class MainActivity : AppCompatActivity() {
                     }
                     currentInput.append(sanitized)
                     updateLcdLive()
-                    Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Pasted: $sanitized", Toast.LENGTH_SHORT).show()
                 }
                 true
-            } else false
+            } else {
+                false
+            }
         }
+
+        tvExpression.setOnLongClickListener(pasteListener)
+        cursorBar.setOnLongClickListener(pasteListener)
+        expressionContainer.setOnLongClickListener(pasteListener)
+        lcdScreen.setOnLongClickListener(pasteListener)
     }
 
     private fun showSettingsDialog() {
@@ -209,7 +232,15 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showThemeDialog() {
-        val themeNames = arrayOf("Classic Nokia (Green Screen)", "Dark Retro (White Screen)", "Purple Pixel (Lilac Screen)")
+        val themeNames = arrayOf(
+            "Classic Nokia (Original)",
+            "Dark Retro",
+            "Purple Pixel",
+            "Orange & Cream",
+            "Black & Yellow",
+            "Royal Blue",
+            "Graphite & Ice Blue"
+        )
         AlertDialog.Builder(this)
             .setTitle("Select Calculator Theme")
             .setSingleChoiceItems(themeNames, currentTheme) { dialog, which ->
@@ -253,6 +284,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun isOperatorBtn(id: Int): Boolean {
+        return id == R.id.btnAC || id == R.id.btnDel || id == R.id.btnToggleSign ||
+               id == R.id.btnPercent || id == R.id.btnDivide || id == R.id.btnMultiply ||
+               id == R.id.btnMinus || id == R.id.btnPlus || id == R.id.btnEqual
+    }
+
     private fun applyTheme(themeIndex: Int) {
         val density = resources.displayMetrics.density
         val chassisRadius = 18 * density
@@ -282,6 +319,7 @@ class MainActivity : AppCompatActivity() {
                 cursorBar.setBackgroundColor(lcdText)
                 tvResult.setTextColor(lcdText)
                 tvLcdClock.setTextColor(lcdText)
+                btnCopy.setTextColor(lcdText)
 
                 val burgundy = Color.parseColor("#6A2222")
                 val burgundyPress = Color.parseColor("#421313")
@@ -315,6 +353,7 @@ class MainActivity : AppCompatActivity() {
                 cursorBar.setBackgroundColor(darkLcdText)
                 tvResult.setTextColor(darkLcdText)
                 tvLcdClock.setTextColor(darkLcdText)
+                btnCopy.setTextColor(darkLcdText)
 
                 val darkBtn = Color.parseColor("#272A30")
                 val darkBtnPress = Color.parseColor("#17191C")
@@ -357,6 +396,7 @@ class MainActivity : AppCompatActivity() {
                 cursorBar.setBackgroundColor(purpleLcdText)
                 tvResult.setTextColor(purpleLcdText)
                 tvLcdClock.setTextColor(purpleLcdText)
+                btnCopy.setTextColor(purpleLcdText)
 
                 val purpleBtn = Color.parseColor("#5A3E76")
                 val purpleBtnPress = Color.parseColor("#3B2550")
@@ -374,6 +414,182 @@ class MainActivity : AppCompatActivity() {
                             btn.background = makeBevel(whiteKey, Color.WHITE, whiteKeyPress, 12f)
                             btn.setTextColor(Color.parseColor("#2A143D"))
                         }
+                    }
+                }
+            }
+            3 -> { // Orange & Cream
+                chassisLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#F97316"))
+                    cornerRadius = chassisRadius
+                    setStroke((3 * density).toInt(), Color.parseColor("#EA580C"))
+                }
+                tvBrand.setTextColor(Color.WHITE)
+                btnSettings.setTextColor(Color.WHITE)
+
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#7C2D12"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#FFFFFF"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val mainText = Color.parseColor("#292524")
+                tvExpression.setTextColor(mainText)
+                cursorBar.setBackgroundColor(mainText)
+                tvResult.setTextColor(mainText)
+                tvLcdClock.setTextColor(mainText)
+                btnCopy.setTextColor(mainText)
+
+                val opColor = Color.parseColor("#9A3412")
+                val opPress = Color.parseColor("#7C2D12")
+                val opBorder = Color.parseColor("#C2410C")
+
+                val numColor = Color.parseColor("#FFF7ED")
+                val numPress = Color.parseColor("#FFEDD5")
+                val numBorder = Color.parseColor("#FED7AA")
+
+                for (btn in allButtons) {
+                    if (isOperatorBtn(btn.id)) {
+                        btn.background = makeBevel(opColor, opBorder, opPress, 12f)
+                        btn.setTextColor(Color.parseColor("#FFFFFF"))
+                    } else {
+                        btn.background = makeBevel(numColor, numBorder, numPress, 12f)
+                        btn.setTextColor(mainText)
+                    }
+                }
+            }
+            4 -> { // Black & Yellow
+                chassisLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#F4C542"))
+                    cornerRadius = chassisRadius
+                    setStroke((3 * density).toInt(), Color.parseColor("#DDA922"))
+                }
+                tvBrand.setTextColor(Color.parseColor("#292929"))
+                btnSettings.setTextColor(Color.parseColor("#292929"))
+
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#1F1F1F"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#FFFFFF"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val mainText = Color.parseColor("#292929")
+                tvExpression.setTextColor(mainText)
+                cursorBar.setBackgroundColor(mainText)
+                tvResult.setTextColor(mainText)
+                tvLcdClock.setTextColor(mainText)
+                btnCopy.setTextColor(mainText)
+
+                val opColor = Color.parseColor("#292929")
+                val opPress = Color.parseColor("#151515")
+                val opBorder = Color.parseColor("#444444")
+
+                val numColor = Color.parseColor("#FFF9E9")
+                val numPress = Color.parseColor("#F5E6BD")
+                val numBorder = Color.parseColor("#EAD69E")
+
+                val yellowText = Color.parseColor("#F4C542")
+
+                for (btn in allButtons) {
+                    if (isOperatorBtn(btn.id)) {
+                        btn.background = makeBevel(opColor, opBorder, opPress, 12f)
+                        btn.setTextColor(yellowText)
+                    } else {
+                        btn.background = makeBevel(numColor, numBorder, numPress, 12f)
+                        btn.setTextColor(mainText)
+                    }
+                }
+            }
+            5 -> { // Royal Blue
+                chassisLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#2563EB"))
+                    cornerRadius = chassisRadius
+                    setStroke((3 * density).toInt(), Color.parseColor("#1D4ED8"))
+                }
+                tvBrand.setTextColor(Color.WHITE)
+                btnSettings.setTextColor(Color.WHITE)
+
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#172554"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#FFFFFF"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val mainText = Color.parseColor("#172554")
+                tvExpression.setTextColor(mainText)
+                cursorBar.setBackgroundColor(mainText)
+                tvResult.setTextColor(mainText)
+                tvLcdClock.setTextColor(mainText)
+                btnCopy.setTextColor(mainText)
+
+                val opColor = Color.parseColor("#1D4ED8")
+                val opPress = Color.parseColor("#1E40AF")
+                val opBorder = Color.parseColor("#3B82F6")
+
+                val numColor = Color.parseColor("#EFF6FF")
+                val numPress = Color.parseColor("#DBEAFE")
+                val numBorder = Color.parseColor("#BFDBFE")
+
+                for (btn in allButtons) {
+                    if (isOperatorBtn(btn.id)) {
+                        btn.background = makeBevel(opColor, opBorder, opPress, 12f)
+                        btn.setTextColor(Color.parseColor("#FFFFFF"))
+                    } else {
+                        btn.background = makeBevel(numColor, numBorder, numPress, 12f)
+                        btn.setTextColor(mainText)
+                    }
+                }
+            }
+            6 -> { // Graphite & Ice Blue
+                chassisLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#202124"))
+                    cornerRadius = chassisRadius
+                    setStroke((3 * density).toInt(), Color.parseColor("#303134"))
+                }
+                tvBrand.setTextColor(Color.parseColor("#65D6FF"))
+                btnSettings.setTextColor(Color.parseColor("#65D6FF"))
+
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#111214"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#FFFFFF"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val mainText = Color.parseColor("#202124")
+                tvExpression.setTextColor(mainText)
+                cursorBar.setBackgroundColor(mainText)
+                tvResult.setTextColor(mainText)
+                tvLcdClock.setTextColor(mainText)
+                btnCopy.setTextColor(mainText)
+
+                val opColor = Color.parseColor("#30343B")
+                val opPress = Color.parseColor("#1E2024")
+                val opBorder = Color.parseColor("#434852")
+
+                val numColor = Color.parseColor("#F1F3F4")
+                val numPress = Color.parseColor("#E0E3E6")
+                val numBorder = Color.parseColor("#D1D5DB")
+
+                val iceBlueText = Color.parseColor("#65D6FF")
+
+                for (btn in allButtons) {
+                    if (isOperatorBtn(btn.id)) {
+                        btn.background = makeBevel(opColor, opBorder, opPress, 12f)
+                        btn.setTextColor(iceBlueText)
+                    } else {
+                        btn.background = makeBevel(numColor, numBorder, numPress, 12f)
+                        btn.setTextColor(mainText)
                     }
                 }
             }
@@ -437,6 +653,7 @@ class MainActivity : AppCompatActivity() {
             triggerSound(v)
             currentInput.setLength(0)
             isEvaluated = false
+            lastFullExpression = ""
             tvExpression.text = ""
             cursorBar.visibility = View.GONE
             tvResult.text = ""
@@ -448,6 +665,7 @@ class MainActivity : AppCompatActivity() {
             if (isEvaluated) {
                 currentInput.setLength(0)
                 isEvaluated = false
+                lastFullExpression = ""
                 tvExpression.text = ""
                 cursorBar.visibility = View.GONE
                 tvResult.text = ""
@@ -465,6 +683,7 @@ class MainActivity : AppCompatActivity() {
             val ans = CalculationEngine.evaluate(expr, isLivePreview = false)
 
             if (ans != null) {
+                lastFullExpression = "$expr = $ans"
                 currentInput.setLength(0)
                 currentInput.append(ans)
                 isEvaluated = true
