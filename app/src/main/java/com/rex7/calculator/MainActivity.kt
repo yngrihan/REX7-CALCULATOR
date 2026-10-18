@@ -2,17 +2,25 @@ package com.rex7.calculator
 
 import android.annotation.SuppressLint
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
+import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,8 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnHistory: TextView
 
     private val allButtons = mutableListOf<AppCompatButton>()
-    private val currentInput = StringBuilder(64)
-    private var lastCalculated = ""
+    private val currentInput = StringBuilder(128)
     private val bgExecutor = Executors.newSingleThreadExecutor()
 
     private val PREFS_NAME = "rex7_calc_prefs"
@@ -58,6 +65,7 @@ class MainActivity : AppCompatActivity() {
 
         collectAllButtons()
         bindKeyActions()
+        setupClipboardControls()
 
         btnSettings.setOnClickListener { showSettingsDialog() }
         btnHistory.setOnClickListener { showHistoryDialog() }
@@ -82,6 +90,37 @@ class MainActivity : AppCompatActivity() {
                 it.backgroundTintList = null
                 allButtons.add(it)
             }
+        }
+    }
+
+    private fun setupClipboardControls() {
+        tvResult.setOnLongClickListener {
+            val text = tvResult.text.toString()
+            if (text.isNotEmpty() && text != "Error") {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
+                Toast.makeText(this, "Result copied", Toast.LENGTH_SHORT).show()
+                true
+            } else false
+        }
+
+        tvExpression.setOnLongClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = clipboard.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                val raw = clip.getItemAt(0).coerceToText(this).toString()
+                val sanitized = raw.replace("*", "×").replace("/", "÷").replace("-", "−")
+                    .filter { it in "0123456789+−×÷%.() " }.trim()
+
+                if (sanitized.isNotEmpty()) {
+                    currentInput.append(sanitized)
+                    updateLcdLive()
+                    Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this, "No valid expression to paste", Toast.LENGTH_SHORT).show()
+                }
+                true
+            } else false
         }
     }
 
@@ -243,7 +282,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         bindInstantTouch(R.id.btnPlus) { appendOperator('+') }
-        bindInstantTouch(R.id.btnMinus) { appendOperator('-') }
+        bindInstantTouch(R.id.btnMinus) { appendOperator('−') }
         bindInstantTouch(R.id.btnMultiply) { appendOperator('×') }
         bindInstantTouch(R.id.btnDivide) { appendOperator('÷') }
         bindInstantTouch(R.id.btnPercent) { appendOperator('%') }
@@ -253,11 +292,10 @@ class MainActivity : AppCompatActivity() {
         bindInstantTouch(R.id.btnToggleSign) {
             val s = currentInput.toString()
             if (s.isNotEmpty()) {
-                if (s.startsWith("-")) {
-                    currentInput.setLength(0)
-                    currentInput.append(s.substring(1))
+                if (s.startsWith("−")) {
+                    currentInput.delete(0, 1)
                 } else {
-                    currentInput.insert(0, "-")
+                    currentInput.insert(0, "−")
                 }
                 updateLcdLive()
             }
@@ -265,9 +303,10 @@ class MainActivity : AppCompatActivity() {
 
         bindInstantTouch(R.id.btnAC) {
             currentInput.setLength(0)
-            lastCalculated = ""
             tvExpression.text = ""
             tvResult.text = "0"
+            measureAndScaleText(tvExpression, "", 34f, 16f)
+            measureAndScaleText(tvResult, "0", 46f, 22f)
         }
 
         bindInstantTouch(R.id.btnDel) {
@@ -280,31 +319,35 @@ class MainActivity : AppCompatActivity() {
         bindInstantTouch(R.id.btnEqual) {
             if (currentInput.isEmpty()) return@bindInstantTouch
             val expr = currentInput.toString()
-            val ans = if (lastCalculated.isNotEmpty()) lastCalculated else solveMath(expr)
+            val ans = solveMath(expr)
 
             if (ans != null && ans != "Error") {
                 tvExpression.text = expr
                 tvResult.text = ans
+                measureAndScaleText(tvExpression, expr, 34f, 16f)
+                measureAndScaleText(tvResult, ans, 46f, 22f)
+
                 currentInput.setLength(0)
                 currentInput.append(ans)
-                lastCalculated = ans
+
                 bgExecutor.execute { saveHistory(expr, ans) }
             } else {
                 tvResult.text = "Error"
+                measureAndScaleText(tvResult, "Error", 46f, 22f)
             }
         }
     }
 
     private fun appendOperator(op: Char) {
         if (currentInput.isEmpty()) {
-            if (op == '-') {
-                currentInput.append('-')
+            if (op == '−') {
+                currentInput.append('−')
                 updateLcdLive()
             }
             return
         }
         val last = currentInput.last()
-        if (last in "+-×÷%") {
+        if (last in "+−×÷%") {
             currentInput.setCharAt(currentInput.length - 1, op)
         } else {
             currentInput.append(op)
@@ -315,17 +358,45 @@ class MainActivity : AppCompatActivity() {
     private fun updateLcdLive() {
         val s = currentInput.toString()
         tvExpression.text = s
+        measureAndScaleText(tvExpression, s, 34f, 16f)
+
         if (s.isNotEmpty()) {
-            if (s == "." || s == "-") return
+            if (s == "." || s == "−") return
             val preview = solveMath(s)
             if (preview != null) {
-                lastCalculated = preview
                 tvResult.text = preview
+                measureAndScaleText(tvResult, preview, 46f, 22f)
             }
         } else {
-            lastCalculated = ""
             tvResult.text = "0"
+            measureAndScaleText(tvResult, "0", 46f, 22f)
         }
+    }
+
+    private fun measureAndScaleText(textView: TextView, text: String, maxSp: Float, minSp: Float) {
+        if (text.isEmpty()) {
+            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, maxSp)
+            return
+        }
+
+        val availableWidth = (textView.width - textView.paddingStart - textView.paddingEnd).toFloat()
+        if (availableWidth <= 0f) {
+            textView.post { measureAndScaleText(textView, text, maxSp, minSp) }
+            return
+        }
+
+        val paint = Paint(textView.paint)
+        val density = resources.displayMetrics.scaledDensity
+
+        var currentSp = maxSp
+        while (currentSp > minSp) {
+            paint.textSize = currentSp * density
+            if (paint.measureText(text) <= availableWidth) {
+                break
+            }
+            currentSp -= 1.5f
+        }
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, currentSp)
     }
 
     private fun saveHistory(expr: String, ans: String) {
@@ -352,9 +423,10 @@ class MainActivity : AppCompatActivity() {
                     if (part.isNotEmpty()) {
                         currentInput.setLength(0)
                         currentInput.append(part)
-                        lastCalculated = part
                         tvExpression.text = ""
                         tvResult.text = part
+                        measureAndScaleText(tvExpression, "", 34f, 16f)
+                        measureAndScaleText(tvResult, part, 46f, 22f)
                     }
                 }
             }
@@ -365,12 +437,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun solveMath(expr: String): String? {
         return try {
-            val sanitized = expr.replace('×', '*').replace('÷', '/')
+            val sanitized = expr.replace('×', '*').replace('÷', '/').replace('−', '-')
             val res = MathParser(sanitized).eval()
-            if (res.isNaN() || res.isInfinite()) return null
-            if (res % 1.0 == 0.0) res.toLong().toString() else String.format(Locale.US, "%.4f", res).trimEnd('0').trimEnd('.')
+            if (res.isNaN() || res.isInfinite()) null else formatDecimal(res)
         } catch (_: Exception) {
             null
+        }
+    }
+
+    private fun formatDecimal(value: Double): String {
+        return try {
+            val bd = BigDecimal(value.toString(), MathContext(12, RoundingMode.HALF_UP))
+            val stripped = bd.stripTrailingZeros()
+            stripped.toPlainString()
+        } catch (_: Exception) {
+            if (value % 1.0 == 0.0) value.toLong().toString() else String.format(Locale.US, "%.6f", value).trimEnd('0').trimEnd('.')
         }
     }
 
@@ -394,7 +475,9 @@ class MainActivity : AppCompatActivity() {
 
         fun eval(): Double {
             advance()
-            return parseAddSub()
+            val v = parseAddSub()
+            if (idx < src.length && c != '\u0000') return Double.NaN
+            return v
         }
 
         private fun parseAddSub(): Double {
