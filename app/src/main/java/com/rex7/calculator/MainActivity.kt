@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
-import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
 import android.view.View
 import android.widget.TextView
@@ -15,8 +14,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var tvExpression: TextView
     private lateinit var tvResult: TextView
-    private var currentInput = StringBuilder()
-    private var lastPreviewResult: String = ""
+    private val currentInput = StringBuilder(64)
+    private var lastCalculated = ""
     private val bgExecutor = Executors.newSingleThreadExecutor()
 
     private val PREFS_NAME = "rex7_calculator_prefs"
@@ -29,96 +28,92 @@ class MainActivity : AppCompatActivity() {
         tvExpression = findViewById(R.id.tvExpression)
         tvResult = findViewById(R.id.tvResult)
 
-        findViewById<TextView>(R.id.btnHistory)?.setOnClickListener {
-            it.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        findViewById<View>(R.id.btnHistory)?.setOnClickListener {
             showHistoryDialog()
         }
 
-        setupInstantButtons()
+        bindFastButtons()
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private fun setInstantTouch(id: Int, action: () -> Unit) {
-        val view = findViewById<View>(id) ?: return
-        view.setOnTouchListener { v, event ->
+    private fun bindInstant(id: Int, onTouch: () -> Unit) {
+        val v = findViewById<View>(id) ?: return
+        v.setOnTouchListener { view, event ->
             if (event.action == MotionEvent.ACTION_DOWN) {
-                v.isPressed = true
-                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                action()
+                view.isPressed = true
+                onTouch()
             } else if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-                v.isPressed = false
+                view.isPressed = false
             }
             true
         }
     }
 
-    private fun setupInstantButtons() {
-        val numberButtons = listOf(
-            R.id.btn0 to "0", R.id.btn1 to "1", R.id.btn2 to "2",
-            R.id.btn3 to "3", R.id.btn4 to "4", R.id.btn5 to "5",
-            R.id.btn6 to "6", R.id.btn7 to "7", R.id.btn8 to "8",
-            R.id.btn9 to "9", R.id.btnDot to "."
+    private fun bindFastButtons() {
+        val digits = listOf(
+            R.id.btn0 to '0', R.id.btn1 to '1', R.id.btn2 to '2',
+            R.id.btn3 to '3', R.id.btn4 to '4', R.id.btn5 to '5',
+            R.id.btn6 to '6', R.id.btn7 to '7', R.id.btn8 to '8',
+            R.id.btn9 to '9', R.id.btnDot to '.'
         )
 
-        for ((id, value) in numberButtons) {
-            setInstantTouch(id) {
-                currentInput.append(value)
-                updateDisplay()
+        for ((id, ch) in digits) {
+            bindInstant(id) {
+                currentInput.append(ch)
+                renderLive()
             }
         }
 
-        setInstantTouch(R.id.btnPlus) { appendOperator("+") }
-        setInstantTouch(R.id.btnMinus) { appendOperator("-") }
-        setInstantTouch(R.id.btnMultiply) { appendOperator("×") }
-        setInstantTouch(R.id.btnDivide) { appendOperator("÷") }
-        setInstantTouch(R.id.btnPercent) { appendOperator("%") }
+        bindInstant(R.id.btnPlus) { appendOp('+') }
+        bindInstant(R.id.btnMinus) { appendOp('-') }
+        bindInstant(R.id.btnMultiply) { appendOp('×') }
+        bindInstant(R.id.btnDivide) { appendOp('÷') }
+        bindInstant(R.id.btnPercent) { appendOp('%') }
 
-        setInstantTouch(R.id.btnParens) {
-            val openCount = currentInput.count { it == '(' }
-            val closeCount = currentInput.count { it == ')' }
-            if (openCount > closeCount && currentInput.isNotEmpty() && (currentInput.last().isDigit() || currentInput.last() == ')')) {
-                currentInput.append(")")
+        bindInstant(R.id.btnParens) {
+            var open = 0
+            var close = 0
+            for (i in 0 until currentInput.length) {
+                if (currentInput[i] == '(') open++
+                else if (currentInput[i] == ')') close++
+            }
+            if (open > close && currentInput.isNotEmpty() && (currentInput.last().isDigit() || currentInput.last() == ')')) {
+                currentInput.append(')')
             } else {
-                currentInput.append("(")
+                currentInput.append('(')
             }
-            updateDisplay()
+            renderLive()
         }
 
-        setInstantTouch(R.id.btnAC) {
-            currentInput.clear()
-            lastPreviewResult = ""
+        bindInstant(R.id.btnAC) {
+            currentInput.setLength(0)
+            lastCalculated = ""
             tvExpression.text = ""
             tvResult.text = "0"
         }
 
-        setInstantTouch(R.id.btnDel) {
+        bindInstant(R.id.btnDel) {
             if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
-                updateDisplay()
+                renderLive()
             }
         }
 
-        // Zero-Delay Instant Equals Handler
-        setInstantTouch(R.id.btnEqual) {
+        // 0ms Pure Swap on Equals
+        bindInstant(R.id.btnEqual) {
+            if (currentInput.isEmpty()) return@bindInstant
             val expr = currentInput.toString()
-            if (expr.isEmpty()) return@setInstantTouch
+            val ans = if (lastCalculated.isNotEmpty()) lastCalculated else quickSolve(expr)
 
-            // Instant result swap without re-parsing delays
-            val res = if (lastPreviewResult.isNotEmpty() && lastPreviewResult != "Error") {
-                lastPreviewResult
-            } else {
-                evaluateExpression(expr) ?: "Error"
-            }
-
-            if (res != "Error") {
+            if (ans != null && ans != "Error") {
                 tvExpression.text = expr
-                tvResult.text = res
-                currentInput = StringBuilder(res)
-                lastPreviewResult = res
+                tvResult.text = ans
+                currentInput.setLength(0)
+                currentInput.append(ans)
+                lastCalculated = ans
 
-                // Save history asynchronously on background thread
                 bgExecutor.execute {
-                    saveToHistory("$expr = $res")
+                    saveHistory(expr, ans)
                 }
             } else {
                 tvResult.text = "Error"
@@ -126,43 +121,44 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun appendOperator(op: String) {
-        if (currentInput.isEmpty() && op == "-") {
-            currentInput.append("-")
-            updateDisplay()
+    private fun appendOp(op: Char) {
+        if (currentInput.isEmpty()) {
+            if (op == '-') {
+                currentInput.append('-')
+                renderLive()
+            }
             return
         }
-        if (currentInput.isNotEmpty()) {
-            val lastChar = currentInput.last()
-            if (lastChar in "+-×÷%") {
-                currentInput.setCharAt(currentInput.length - 1, op[0])
-            } else {
-                currentInput.append(op)
-            }
-            updateDisplay()
+        val last = currentInput.last()
+        if (last == '+' || last == '-' || last == '×' || last == '÷' || last == '%') {
+            currentInput.setCharAt(currentInput.length - 1, op)
+        } else {
+            currentInput.append(op)
         }
+        renderLive()
     }
 
-    private fun updateDisplay() {
-        val expr = currentInput.toString()
-        tvExpression.text = expr
-        if (expr.isNotEmpty()) {
-            val preview = evaluateExpression(expr)
-            if (preview != null) {
-                lastPreviewResult = preview
-                tvResult.text = preview
+    private fun renderLive() {
+        val str = currentInput.toString()
+        tvExpression.text = str
+        if (str.isNotEmpty()) {
+            val calc = quickSolve(str)
+            if (calc != null) {
+                lastCalculated = calc
+                tvResult.text = calc
             }
         } else {
-            lastPreviewResult = ""
+            lastCalculated = ""
             tvResult.text = "0"
         }
     }
 
-    private fun saveToHistory(entry: String) {
+    private fun saveHistory(expr: String, ans: String) {
         try {
             val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val existing = prefs.getString(KEY_HISTORY, "") ?: ""
-            val updated = if (existing.isEmpty()) entry else "$entry\n$existing"
+            val old = prefs.getString(KEY_HISTORY, "") ?: ""
+            val item = "$expr = $ans"
+            val updated = if (old.isEmpty()) item else "$item\n$old"
             prefs.edit().putString(KEY_HISTORY, updated).apply()
         } catch (_: Exception) {}
     }
@@ -170,24 +166,25 @@ class MainActivity : AppCompatActivity() {
     private fun showHistoryDialog() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val historyRaw = prefs.getString(KEY_HISTORY, "") ?: ""
-        val historyItems = if (historyRaw.isEmpty()) arrayOf("No history yet") else historyRaw.split("\n").filter { it.isNotBlank() }.toTypedArray()
+        val items = if (historyRaw.isEmpty()) arrayOf("No history yet") else historyRaw.split("\n").filter { it.isNotBlank() }.toTypedArray()
 
         AlertDialog.Builder(this)
-            .setTitle("Calculation History")
-            .setItems(historyItems) { _, which ->
+            .setTitle("History")
+            .setItems(items) { _, which ->
                 if (historyRaw.isNotEmpty()) {
-                    val selected = historyItems[which]
-                    val resultPart = selected.substringAfterLast("=", "").trim()
-                    if (resultPart.isNotEmpty()) {
-                        currentInput = StringBuilder(resultPart)
-                        lastPreviewResult = resultPart
+                    val sel = items[which]
+                    val part = sel.substringAfterLast('=', "").trim()
+                    if (part.isNotEmpty()) {
+                        currentInput.setLength(0)
+                        currentInput.append(part)
+                        lastCalculated = part
                         tvExpression.text = ""
-                        tvResult.text = resultPart
+                        tvResult.text = part
                     }
                 }
             }
             .setPositiveButton("Close", null)
-            .setNegativeButton("Clear All") { _, _ ->
+            .setNegativeButton("Clear") { _, _ ->
                 bgExecutor.execute {
                     prefs.edit().remove(KEY_HISTORY).apply()
                 }
@@ -195,86 +192,82 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun evaluateExpression(expr: String): String? {
+    private fun quickSolve(expr: String): String? {
         return try {
-            val sanitized = expr.replace("×", "*").replace("÷", "/")
-            val parser = MathParser(sanitized)
-            val result = parser.parse()
-            if (result.isNaN() || result.isInfinite()) return null
-            if (result % 1.0 == 0.0) {
-                result.toLong().toString()
-            } else {
-                String.format("%.4f", result).trimEnd('0').trimEnd('.')
-            }
-        } catch (e: Exception) {
+            val clean = expr.replace('×', '*').replace('÷', '/')
+            val res = Parser(clean).eval()
+            if (res.isNaN() || res.isInfinite()) return null
+            if (res % 1.0 == 0.0) res.toLong().toString() else String.format("%.4f", res).trimEnd('0').trimEnd('.')
+        } catch (_: Exception) {
             null
         }
     }
 
-    private class MathParser(private val str: String) {
-        private var pos = -1
-        private var ch = ' '
+    private class Parser(private val s: String) {
+        private var idx = -1
+        private var cur = ' '
 
-        private fun nextChar() {
-            ch = if (++pos < str.length) str[pos] else '\u0000'
+        private fun advance() {
+            idx++
+            cur = if (idx < s.length) s[idx] else '\u0000'
         }
 
-        private fun eat(charToEat: Char): Boolean {
-            while (ch == ' ') nextChar()
-            if (ch == charToEat) {
-                nextChar()
+        private fun match(c: Char): Boolean {
+            while (cur == ' ') advance()
+            if (cur == c) {
+                advance()
                 return true
             }
             return false
         }
 
-        fun parse(): Double {
-            nextChar()
-            return parseExpr()
+        fun eval(): Double {
+            advance()
+            return parseSum()
         }
 
-        private fun parseExpr(): Double {
-            var x = parseTerm()
+        private fun parseSum(): Double {
+            var v = parseMul()
             while (true) {
                 when {
-                    eat('+') -> x += parseTerm()
-                    eat('-') -> x -= parseTerm()
-                    else -> return x
+                    match('+') -> v += parseMul()
+                    match('-') -> v -= parseMul()
+                    else -> return v
                 }
             }
         }
 
-        private fun parseTerm(): Double {
-            var x = parseFactor()
+        private fun parseMul(): Double {
+            var v = parsePrimary()
             while (true) {
                 when {
-                    eat('*') -> x *= parseFactor()
-                    eat('/') -> {
-                        val divisor = parseFactor()
-                        x = if (divisor != 0.0) x / divisor else Double.NaN
+                    match('*') -> v *= parsePrimary()
+                    match('/') -> {
+                        val d = parsePrimary()
+                        v = if (d != 0.0) v / d else Double.NaN
                     }
-                    else -> return x
+                    else -> return v
                 }
             }
         }
 
-        private fun parseFactor(): Double {
-            if (eat('+')) return parseFactor()
-            if (eat('-')) return -parseFactor()
+        private fun parsePrimary(): Double {
+            if (match('+')) return parsePrimary()
+            if (match('-')) return -parsePrimary()
 
-            var x: Double
-            val startPos = pos
-            if (eat('(')) {
-                x = parseExpr()
-                eat(')')
-            } else if ((ch in '0'..'9') || ch == '.') {
-                while ((ch in '0'..'9') || ch == '.') nextChar()
-                x = str.substring(startPos, pos).toDouble()
+            var v: Double
+            val start = idx
+            if (match('(')) {
+                v = parseSum()
+                match(')')
+            } else if ((cur in '0'..'9') || cur == '.') {
+                while ((cur in '0'..'9') || cur == '.') advance()
+                v = s.substring(start, idx).toDouble()
             } else {
                 return 0.0
             }
-            if (eat('%')) x /= 100.0
-            return x
+            if (match('%')) v /= 100.0
+            return v
         }
     }
 }
