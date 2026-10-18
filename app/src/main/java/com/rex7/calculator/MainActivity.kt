@@ -117,7 +117,8 @@ class MainActivity : AppCompatActivity() {
     private fun evaluateExpression(expr: String): String? {
         return try {
             val sanitized = expr.replace("×", "*").replace("÷", "/")
-            val result = simpleEval(sanitized)
+            val parser = MathParser(sanitized)
+            val result = parser.parse()
             if (result.isNaN() || result.isInfinite()) return null
             if (result % 1.0 == 0.0) {
                 result.toLong().toString()
@@ -129,15 +130,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun simpleEval(str: String): Double {
-        var pos = -1
-        var ch = ' '
+    private class MathParser(private val str: String) {
+        private var pos = -1
+        private var ch = ' '
 
-        fun nextChar() {
+        private fun nextChar() {
             ch = if (++pos < str.length) str[pos] else '\u0000'
         }
 
-        fun eat(charToEat: Char): Boolean {
+        private fun eat(charToEat: Char): Boolean {
             while (ch == ' ') nextChar()
             if (ch == charToEat) {
                 nextChar()
@@ -146,7 +147,38 @@ class MainActivity : AppCompatActivity() {
             return false
         }
 
-        fun parseFactor(): Double {
+        fun parse(): Double {
+            nextChar()
+            val x = parseExpr()
+            return x
+        }
+
+        private fun parseExpr(): Double {
+            var x = parseTerm()
+            while (true) {
+                when {
+                    eat('+') -> x += parseTerm()
+                    eat('-') -> x -= parseTerm()
+                    else -> return x
+                }
+            }
+        }
+
+        private fun parseTerm(): Double {
+            var x = parseFactor()
+            while (true) {
+                when {
+                    eat('*') -> x *= parseFactor()
+                    eat('/') -> {
+                        val divisor = parseFactor()
+                        x = if (divisor != 0.0) x / divisor else Double.NaN
+                    }
+                    else -> return x
+                }
+            }
+        }
+
+        private fun parseFactor(): Double {
             if (eat('+')) return parseFactor()
             if (eat('-')) return -parseFactor()
 
@@ -164,33 +196,5 @@ class MainActivity : AppCompatActivity() {
             if (eat('%')) x /= 100.0
             return x
         }
-
-        fun parseTerm(): Double {
-            var x = parseFactor()
-            while (true) {
-                when {
-                    eat('*') -> x *= parseFactor()
-                    eat('/') -> {
-                        val divisor = parseFactor()
-                        x = if (divisor != 0.0) x / divisor else Double.NaN
-                    }
-                    else -> return x
-                }
-            }
-        }
-
-        fun parseExpr(): Double {
-            var x = parseTerm()
-            while (true) {
-                when {
-                    eat('+') -> x += parseTerm()
-                    eat('-') -> x -= parseTerm()
-                    else -> return x
-                }
-            }
-        }
-
-        nextChar()
-        return parseExpr()
     }
 }
