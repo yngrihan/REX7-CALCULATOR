@@ -68,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         lcdBorderLayout = findViewById(R.id.lcdBorderLayout)
         lcdScreen = findViewById(R.id.lcdScreen)
         scrollExpression = findViewById(R.id.scrollExpression)
-        expressionContainer = findViewById(R.id.expressionContainer)
+        expressionContainer = findViewById(R.id.scrollExpression)
         tvBrand = findViewById(R.id.tvBrand)
         tvLcdClock = findViewById(R.id.tvLcdClock)
         btnCopy = findViewById(R.id.btnCopy)
