@@ -42,6 +42,17 @@ class MainActivity : AppCompatActivity() {
         findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { appendOperator("÷") }
         findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { appendOperator("%") }
 
+        findViewById<AppCompatButton>(R.id.btnParens)?.setOnClickListener {
+            val openCount = currentInput.count { it == '(' }
+            val closeCount = currentInput.count { it == ')' }
+            if (openCount > closeCount && currentInput.isNotEmpty() && (currentInput.last().isDigit() || currentInput.last() == ')')) {
+                currentInput.append(")")
+            } else {
+                currentInput.append("(")
+            }
+            updateDisplay()
+        }
+
         findViewById<AppCompatButton>(R.id.btnAC)?.setOnClickListener {
             currentInput.clear()
             tvExpression.text = ""
@@ -51,18 +62,6 @@ class MainActivity : AppCompatActivity() {
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener {
             if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
-                updateDisplay()
-            }
-        }
-
-        findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener {
-            if (currentInput.isNotEmpty()) {
-                val str = currentInput.toString()
-                if (str.startsWith("-")) {
-                    currentInput = StringBuilder(str.substring(1))
-                } else {
-                    currentInput = StringBuilder("-$str")
-                }
                 updateDisplay()
             }
         }
@@ -119,6 +118,7 @@ class MainActivity : AppCompatActivity() {
         return try {
             val sanitized = expr.replace("×", "*").replace("÷", "/")
             val result = simpleEval(sanitized)
+            if (result.isNaN() || result.isInfinite()) return null
             if (result % 1.0 == 0.0) {
                 result.toLong().toString()
             } else {
@@ -152,7 +152,10 @@ class MainActivity : AppCompatActivity() {
 
             var x: Double
             val startPos = pos
-            if ((ch in '0'..'9') || ch == '.') {
+            if (eat('(')) {
+                x = parseExpr()
+                eat(')')
+            } else if ((ch in '0'..'9') || ch == '.') {
                 while ((ch in '0'..'9') || ch == '.') nextChar()
                 x = str.substring(startPos, pos).toDouble()
             } else {

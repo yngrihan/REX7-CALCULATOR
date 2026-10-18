@@ -10,7 +10,7 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="8dp"
+        android:paddingTop="12dp"
         android:paddingBottom="12dp">
 
         <TextView
@@ -27,19 +27,20 @@
             android:layout_alignParentEnd="true"
             android:text="CALCULATOR"
             android:textColor="@color/accent_blue"
-            android:textSize="14sp"
+            android:textSize="15sp"
             android:textStyle="bold"
             android:letterSpacing="0.1" />
     </RelativeLayout>
 
-    <!-- Calculation Screen Display -->
+    <!-- Calculation Display Screen -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:gravity="bottom|end"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:paddingEnd="8dp"
+        android:paddingBottom="24dp">
 
         <TextView
             android:id="@+id/tvExpression"
@@ -47,7 +48,7 @@
             android:layout_height="wrap_content"
             android:text=""
             android:textColor="@color/text_secondary"
-            android:textSize="28sp"
+            android:textSize="32sp"
             android:maxLines="2" />
 
         <TextView
@@ -56,16 +57,16 @@
             android:layout_height="wrap_content"
             android:text="0"
             android:textColor="@color/text_primary"
-            android:textSize="54sp"
+            android:textSize="64sp"
             android:textStyle="bold"
             android:maxLines="1" />
     </LinearLayout>
 
-    <!-- Full-Screen Keypad -->
+    <!-- Full Modern Keypad -->
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1.7"
+        android:layout_weight="1.6"
         android:stretchColumns="*">
 
         <!-- Row 1 -->
@@ -75,9 +76,9 @@
                 android:layout_margin="5dp" android:background="@drawable/btn_func_bg"
                 android:text="AC" android:textColor="#FF453A" android:textSize="22sp" android:textStyle="bold" />
             <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnDel" android:layout_width="0dp" android:layout_height="match_parent"
+                android:id="@+id/btnParens" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_func_bg"
-                android:text="DEL" android:textColor="@color/text_primary" android:textSize="18sp" />
+                android:text="( )" android:textColor="@color/text_primary" android:textSize="20sp" />
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnPercent" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_func_bg"
@@ -85,7 +86,7 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnDivide" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_op_bg"
-                android:text="÷" android:textColor="@color/text_primary" android:textSize="26sp" />
+                android:text="÷" android:textColor="@color/text_primary" android:textSize="28sp" />
         </TableRow>
 
         <!-- Row 2 -->
@@ -105,7 +106,7 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnMultiply" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_op_bg"
-                android:text="×" android:textColor="@color/text_primary" android:textSize="26sp" />
+                android:text="×" android:textColor="@color/text_primary" android:textSize="28sp" />
         </TableRow>
 
         <!-- Row 3 -->
@@ -125,7 +126,7 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnMinus" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_op_bg"
-                android:text="−" android:textColor="@color/text_primary" android:textSize="26sp" />
+                android:text="−" android:textColor="@color/text_primary" android:textSize="28sp" />
         </TableRow>
 
         <!-- Row 4 -->
@@ -145,15 +146,11 @@
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnPlus" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_op_bg"
-                android:text="+" android:textColor="@color/text_primary" android:textSize="26sp" />
+                android:text="+" android:textColor="@color/text_primary" android:textSize="28sp" />
         </TableRow>
 
-        <!-- Row 5 -->
+        <!-- Row 5 (± removed, Clean Backspace ⌫ added) -->
         <TableRow android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1">
-            <androidx.appcompat.widget.AppCompatButton
-                android:id="@+id/btnToggleSign" android:layout_width="0dp" android:layout_height="match_parent"
-                android:layout_margin="5dp" android:background="@drawable/btn_num_bg"
-                android:text="±" android:textColor="@color/text_primary" android:textSize="22sp" />
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_num_bg"
@@ -163,9 +160,13 @@
                 android:layout_margin="5dp" android:background="@drawable/btn_num_bg"
                 android:text="." android:textColor="@color/text_primary" android:textSize="24sp" />
             <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnDel" android:layout_width="0dp" android:layout_height="match_parent"
+                android:layout_margin="5dp" android:background="@drawable/btn_num_bg"
+                android:text="⌫" android:textColor="@color/text_primary" android:textSize="22sp" />
+            <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btnEqual" android:layout_width="0dp" android:layout_height="match_parent"
                 android:layout_margin="5dp" android:background="@drawable/btn_op_bg"
-                android:text="=" android:textColor="@color/text_primary" android:textSize="26sp" />
+                android:text="=" android:textColor="@color/text_primary" android:textSize="28sp" />
         </TableRow>
     </TableLayout>
 </LinearLayout>
