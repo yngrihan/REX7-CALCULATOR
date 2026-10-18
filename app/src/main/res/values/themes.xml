@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.REX7Calculator" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="android:statusBarColor">#1D2B1A</item>
-        <item name="android:windowBackground">@color/nokia_body</item>
+    <style name="Theme.REX7Calculator" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="android:statusBarColor">#121214</item>
+        <item name="android:navigationBarColor">#121214</item>
+        <item name="android:windowLightStatusBar">false</item>
     </style>
 </resources>
