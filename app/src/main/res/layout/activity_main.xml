@@ -3,8 +3,7 @@
     android:id="@+id/rootContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#15161A"
-    android:gravity="center"
+    android:background="#121316"
     android:orientation="vertical"
     android:padding="12dp">
 
@@ -18,11 +17,11 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="34dp">
+            android:layout_height="32dp">
             <TextView
                 android:id="@+id/btnHistory"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_alignParentStart="true"
                 android:gravity="center"
                 android:text="🕒"
@@ -36,12 +35,12 @@
                 android:letterSpacing="0.18"
                 android:text="REX7"
                 android:textColor="#26211C"
-                android:textSize="19sp"
+                android:textSize="18sp"
                 android:textStyle="bold" />
             <TextView
                 android:id="@+id/btnSettings"
-                android:layout_width="34dp"
-                android:layout_height="34dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
                 android:layout_alignParentEnd="true"
                 android:gravity="center"
                 android:text="⚙"
@@ -52,11 +51,12 @@
         <LinearLayout
             android:id="@+id/lcdBorderLayout"
             android:layout_width="match_parent"
-            android:layout_height="175dp"
-            android:layout_marginTop="8dp"
+            android:layout_height="0dp"
+            android:layout_weight="1.15"
+            android:layout_marginTop="6dp"
             android:layout_marginBottom="12dp"
             android:background="#2E2D28"
-            android:padding="4dp">
+            android:padding="5dp">
 
             <LinearLayout
                 android:id="@+id/lcdScreen"
@@ -79,7 +79,7 @@
                         android:fontFamily="monospace"
                         android:text="M"
                         android:textColor="#182210"
-                        android:textSize="13sp"
+                        android:textSize="14sp"
                         android:textStyle="bold" />
                     <TextView
                         android:id="@+id/tvLcdClock"
@@ -89,7 +89,7 @@
                         android:fontFamily="monospace"
                         android:text="12:34"
                         android:textColor="#182210"
-                        android:textSize="13sp" />
+                        android:textSize="14sp" />
                 </RelativeLayout>
 
                 <TextView
@@ -100,7 +100,7 @@
                     android:fontFamily="monospace"
                     android:gravity="start|center_vertical"
                     android:letterSpacing="0.05"
-                    android:maxLines="1"
+                    android:maxLines="2"
                     android:text=""
                     android:textColor="#182210"
                     android:textSize="24sp" />
@@ -115,7 +115,7 @@
                     android:maxLines="1"
                     android:text="0"
                     android:textColor="#182210"
-                    android:textSize="46sp"
+                    android:textSize="48sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -123,47 +123,47 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
+            android:layout_weight="1.45"
             android:orientation="vertical">
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btnAC" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="AC" android:textSize="16sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnDel" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="DEL" android:textSize="14sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnToggleSign" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="±" android:textSize="18sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnPercent" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="%" android:textSize="18sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnAC" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="AC" android:textSize="16sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnDel" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="DEL" android:textSize="14sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnToggleSign" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="±" android:textSize="18sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnPercent" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="%" android:textSize="18sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="7" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="8" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="9" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnDivide" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="÷" android:textSize="23sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="7" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="8" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="9" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnDivide" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="÷" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="4" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="5" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="6" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnMultiply" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="×" android:textSize="23sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="4" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="5" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="6" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnMultiply" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="×" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="1" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="2" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="3" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnMinus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="−" android:textSize="23sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="1" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="2" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="3" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnMinus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="−" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btnParenOpen" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="(" android:textSize="18sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="0" android:textSize="21sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnParenClose" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text=")" android:textSize="18sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnPlus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="+" android:textSize="23sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnParenOpen" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="(" android:textSize="18sp" android:textStyle="bold" />
+                <Button android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="0" android:textSize="20sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnParenClose" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text=")" android:textSize="18sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnPlus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="+" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.95" android:orientation="horizontal">
-                <Button android:id="@+id/btnDot" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:fontFamily="monospace" android:text="." android:textSize="24sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnEqual" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="3" android:layout_margin="3dp" android:fontFamily="monospace" android:text="=" android:textSize="28sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnDot" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="." android:textSize="24sp" android:textStyle="bold" />
+                <Button android:id="@+id/btnEqual" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="3" android:layout_margin="3dp" android:text="=" android:textSize="28sp" android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

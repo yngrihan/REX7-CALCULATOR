@@ -172,7 +172,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             2 -> {
-                // 3. Purple Pixel (Lavender Body, Purple Top Keys, White-Lavender Number Keys)
+                // 3. Purple Pixel (Lavender Body, Purple Top Keys, White-Lavender Keys)
                 chassisLayout.background = GradientDrawable().apply {
                     setColor(Color.parseColor("#9B7EBD"))
                     cornerRadius = chassisRadius
