@@ -57,8 +57,7 @@ class MainActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
 
-        val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-        tvLcdClock.text = timeFormat.format(Date())
+        tvLcdClock.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
 
         collectAllButtons()
         bindKeyActions()
@@ -99,19 +98,16 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val normal = createShape(baseColor)
-        val pressed = createShape(bottomBorder)
-
         return StateListDrawable().apply {
-            addState(intArrayOf(android.R.attr.state_pressed), pressed)
-            addState(intArrayOf(), normal)
+            addState(intArrayOf(android.R.attr.state_pressed), createShape(bottomBorder))
+            addState(intArrayOf(), createShape(baseColor))
         }
     }
 
     private fun applyTheme(themeIndex: Int) {
         val density = resources.displayMetrics.density
-        val chassisRadius = (18 * density)
-        val lcdRadius = (12 * density)
+        val chassisRadius = 18 * density
+        val lcdRadius = 12 * density
 
         when (themeIndex) {
             0 -> {
@@ -139,11 +135,11 @@ class MainActivity : AppCompatActivity() {
                 tvLcdClock.setTextColor(lcdText)
 
                 val burgundy = Color.parseColor("#742525")
-                val burgundyPressed = Color.parseColor("#531818")
+                val burgundyPress = Color.parseColor("#531818")
                 val burgundyLight = Color.parseColor("#8E3232")
 
                 for (btn in allButtons) {
-                    btn.background = makeBevelDrawable(burgundy, burgundyLight, burgundyPressed, 10f)
+                    btn.background = makeBevelDrawable(burgundy, burgundyLight, burgundyPress, 12f)
                     btn.setTextColor(Color.parseColor("#F5EADB"))
                 }
             }
@@ -181,9 +177,9 @@ class MainActivity : AppCompatActivity() {
 
                 for (btn in allButtons) {
                     if (btn.id == R.id.btnAC || btn.id == R.id.btnEqual) {
-                        btn.background = makeBevelDrawable(redBtn, redBtnLight, redBtnPress, 10f)
+                        btn.background = makeBevelDrawable(redBtn, redBtnLight, redBtnPress, 12f)
                     } else {
-                        btn.background = makeBevelDrawable(darkBtn, darkBtnLight, darkBtnPress, 10f)
+                        btn.background = makeBevelDrawable(darkBtn, darkBtnLight, darkBtnPress, 12f)
                     }
                     btn.setTextColor(Color.parseColor("#E0E6ED"))
                 }
@@ -223,10 +219,10 @@ class MainActivity : AppCompatActivity() {
                 for (btn in allButtons) {
                     val id = btn.id
                     if (id == R.id.btnAC || id == R.id.btnDel || id == R.id.btnToggleSign || id == R.id.btnPercent) {
-                        btn.background = makeBevelDrawable(purpleBtn, purpleBtnLight, purpleBtnPress, 10f)
+                        btn.background = makeBevelDrawable(purpleBtn, purpleBtnLight, purpleBtnPress, 12f)
                         btn.setTextColor(Color.parseColor("#FFFFFF"))
                     } else {
-                        btn.background = makeBevelDrawable(whiteKey, whiteKeyLight, whiteKeyPress, 10f)
+                        btn.background = makeBevelDrawable(whiteKey, whiteKeyLight, whiteKeyPress, 12f)
                         btn.setTextColor(Color.parseColor("#2E1945"))
                     }
                 }
@@ -360,6 +356,7 @@ class MainActivity : AppCompatActivity() {
         val s = currentInput.toString()
         tvExpression.text = s
         if (s.isNotEmpty()) {
+            if (s == "." || s == "-") return
             val preview = solveMath(s)
             if (preview != null) {
                 lastCalculated = preview
@@ -480,7 +477,8 @@ class MainActivity : AppCompatActivity() {
                 eat(')')
             } else if ((c in '0'..'9') || c == '.') {
                 while ((c in '0'..'9') || c == '.') advance()
-                v = src.substring(start, idx).toDouble()
+                val sub = src.substring(start, idx)
+                v = if (sub == "." || sub.isEmpty()) 0.0 else sub.toDouble()
             } else {
                 return 0.0
             }
