@@ -3,20 +3,15 @@ package com.rex7.calculator
 import android.app.AlertDialog
 import android.content.Context
 import android.os.Bundle
-import android.view.HapticFeedbackConstants
-import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
-import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var tvExpression: TextView
     private lateinit var tvResult: TextView
     private var currentInput = StringBuilder()
-    private var lastValidResult: String = ""
-    private val bgExecutor = Executors.newSingleThreadExecutor()
 
     private val PREFS_NAME = "rex7_calculator_prefs"
     private val KEY_HISTORY = "history_list"
@@ -28,8 +23,7 @@ class MainActivity : AppCompatActivity() {
         tvExpression = findViewById(R.id.tvExpression)
         tvResult = findViewById(R.id.tvResult)
 
-        findViewById<TextView>(R.id.btnHistory)?.setOnClickListener { v ->
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        findViewById<TextView>(R.id.btnHistory)?.setOnClickListener {
             showHistoryDialog()
         }
 
@@ -45,23 +39,19 @@ class MainActivity : AppCompatActivity() {
         )
 
         for ((id, value) in numberButtons) {
-            findViewById<AppCompatButton>(id)?.let { btn ->
-                btn.setOnClickListener { v ->
-                    v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-                    currentInput.append(value)
-                    updateDisplay()
-                }
+            findViewById<AppCompatButton>(id)?.setOnClickListener {
+                currentInput.append(value)
+                updateDisplay()
             }
         }
 
-        findViewById<AppCompatButton>(R.id.btnPlus)?.setOnClickListener { handleOp(it, "+") }
-        findViewById<AppCompatButton>(R.id.btnMinus)?.setOnClickListener { handleOp(it, "-") }
-        findViewById<AppCompatButton>(R.id.btnMultiply)?.setOnClickListener { handleOp(it, "×") }
-        findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { handleOp(it, "÷") }
-        findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { handleOp(it, "%") }
+        findViewById<AppCompatButton>(R.id.btnPlus)?.setOnClickListener { appendOperator("+") }
+        findViewById<AppCompatButton>(R.id.btnMinus)?.setOnClickListener { appendOperator("-") }
+        findViewById<AppCompatButton>(R.id.btnMultiply)?.setOnClickListener { appendOperator("×") }
+        findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { appendOperator("÷") }
+        findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { appendOperator("%") }
 
-        findViewById<AppCompatButton>(R.id.btnParens)?.setOnClickListener { v ->
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        findViewById<AppCompatButton>(R.id.btnParens)?.setOnClickListener {
             val openCount = currentInput.count { it == '(' }
             val closeCount = currentInput.count { it == ')' }
             if (openCount > closeCount && currentInput.isNotEmpty() && (currentInput.last().isDigit() || currentInput.last() == ')')) {
@@ -72,32 +62,22 @@ class MainActivity : AppCompatActivity() {
             updateDisplay()
         }
 
-        findViewById<AppCompatButton>(R.id.btnAC)?.setOnClickListener { v ->
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        findViewById<AppCompatButton>(R.id.btnAC)?.setOnClickListener {
             currentInput.clear()
-            lastValidResult = ""
             tvExpression.text = ""
             tvResult.text = "0"
         }
 
-        findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener { v ->
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
+        findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener {
             if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateDisplay()
             }
         }
 
-        // Instant Zero-Delay Equals Button
-        findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener { v ->
-            v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-            calculateFinalResultInstant()
+        findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener {
+            calculateFinalResult()
         }
-    }
-
-    private fun handleOp(v: View, op: String) {
-        v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP)
-        appendOperator(op)
     }
 
     private fun appendOperator(op: String) {
@@ -123,44 +103,32 @@ class MainActivity : AppCompatActivity() {
         if (expr.isNotEmpty()) {
             val preview = evaluateExpression(expr)
             if (preview != null) {
-                lastValidResult = preview
                 tvResult.text = preview
             }
         } else {
-            lastValidResult = ""
             tvResult.text = "0"
         }
     }
 
-    private fun calculateFinalResultInstant() {
+    private fun calculateFinalResult() {
         val expr = currentInput.toString()
         if (expr.isEmpty()) return
-
-        // Agar result preview ready hai toh instantly use karo, recalculate me time waste mat karo
-        val finalRes = if (lastValidResult.isNotEmpty()) lastValidResult else evaluateExpression(expr)
-
-        if (finalRes != null && finalRes != "Error") {
+        val res = evaluateExpression(expr)
+        if (res != null) {
+            saveToHistory("$expr = $res")
             tvExpression.text = expr
-            tvResult.text = finalRes
-            currentInput = StringBuilder(finalRes)
-            lastValidResult = finalRes
-
-            // History background thread me save hogi taaki UI ek millisecond bhi na ruke
-            bgExecutor.execute {
-                saveToHistory("$expr = $finalRes")
-            }
+            tvResult.text = res
+            currentInput = StringBuilder(res)
         } else {
             tvResult.text = "Error"
         }
     }
 
     private fun saveToHistory(entry: String) {
-        try {
-            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            val existing = prefs.getString(KEY_HISTORY, "") ?: ""
-            val updated = if (existing.isEmpty()) entry else "$entry\n$existing"
-            prefs.edit().putString(KEY_HISTORY, updated).apply()
-        } catch (_: Exception) {}
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val existing = prefs.getString(KEY_HISTORY, "") ?: ""
+        val updated = if (existing.isEmpty()) entry else "$entry\n$existing"
+        prefs.edit().putString(KEY_HISTORY, updated).apply()
     }
 
     private fun showHistoryDialog() {
@@ -168,27 +136,24 @@ class MainActivity : AppCompatActivity() {
         val historyRaw = prefs.getString(KEY_HISTORY, "") ?: ""
         val historyItems = if (historyRaw.isEmpty()) arrayOf("No history yet") else historyRaw.split("\n").filter { it.isNotBlank() }.toTypedArray()
 
-        AlertDialog.Builder(this)
-            .setTitle("Calculation History")
-            .setItems(historyItems) { _, which ->
-                if (historyRaw.isNotEmpty()) {
-                    val selected = historyItems[which]
-                    val resultPart = selected.substringAfterLast("=", "").trim()
-                    if (resultPart.isNotEmpty()) {
-                        currentInput = StringBuilder(resultPart)
-                        lastValidResult = resultPart
-                        tvExpression.text = ""
-                        tvResult.text = resultPart
-                    }
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Calculation History")
+        builder.setItems(historyItems) { _, which ->
+            if (historyRaw.isNotEmpty()) {
+                val selected = historyItems[which]
+                val resultPart = selected.substringAfterLast("=", "").trim()
+                if (resultPart.isNotEmpty()) {
+                    currentInput = StringBuilder(resultPart)
+                    tvExpression.text = ""
+                    tvResult.text = resultPart
                 }
             }
-            .setPositiveButton("Close", null)
-            .setNegativeButton("Clear All") { _, _ ->
-                bgExecutor.execute {
-                    prefs.edit().remove(KEY_HISTORY).apply()
-                }
-            }
-            .show()
+        }
+        builder.setPositiveButton("Close", null)
+        builder.setNegativeButton("Clear All") { _, _ ->
+            prefs.edit().remove(KEY_HISTORY).apply()
+        }
+        builder.show()
     }
 
     private fun evaluateExpression(expr: String): String? {
