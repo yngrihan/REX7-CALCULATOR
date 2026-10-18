@@ -441,7 +441,6 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        // Text bilkul static rahega, bina kisi jhatke ke
         tvExpression.text = s
         cursorBar.visibility = View.VISIBLE
         scaleDynamic(tvExpression, s, 48f)
@@ -463,11 +462,11 @@ class MainActivity : AppCompatActivity() {
     private fun scaleDynamic(textView: TextView, text: String, maxSp: Float) {
         val len = text.length
         val calculatedSp = when {
-            len <= 5 -> maxSp          // 1, 1+1, 5+5 -> Extra Large
-            len <= 9 -> maxSp - 6f     // 1+1+1 -> 42sp
-            len <= 14 -> maxSp - 12f   // 36sp
-            len <= 19 -> maxSp - 18f   // 30sp
-            len <= 25 -> maxSp - 24f   // 24sp
+            len <= 5 -> maxSp
+            len <= 9 -> maxSp - 6f
+            len <= 14 -> maxSp - 12f
+            len <= 19 -> maxSp - 18f
+            len <= 25 -> maxSp - 24f
             else -> 20f
         }
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, calculatedSp)
