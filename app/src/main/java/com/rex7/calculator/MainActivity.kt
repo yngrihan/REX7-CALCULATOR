@@ -41,7 +41,9 @@ class MainActivity : AppCompatActivity() {
     private var isEvaluated = false
     private val bgExecutor = Executors.newSingleThreadExecutor()
 
-    private val clockHandler = Handler(Looper.getMainLooper())
+    private val mainHandler = Handler(Looper.getMainLooper())
+    private var cursorVisible = true
+    private lateinit var cursorRunnable: Runnable
     private lateinit var clockRunnable: Runnable
 
     private val PREFS_NAME = "rex7_calc_prefs"
@@ -63,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
 
-        startLiveClock()
+        startClockAndCursor()
         collectAllButtons()
         bindKeyActions()
         setupDirectCopyPaste()
@@ -76,19 +78,31 @@ class MainActivity : AppCompatActivity() {
         applyTheme(currentTheme)
     }
 
-    private fun startLiveClock() {
+    private fun startClockAndCursor() {
         clockRunnable = object : Runnable {
             override fun run() {
                 tvLcdClock.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
-                clockHandler.postDelayed(this, 1000)
+                mainHandler.postDelayed(this, 1000)
             }
         }
-        clockHandler.post(clockRunnable)
+        mainHandler.post(clockRunnable)
+
+        cursorRunnable = object : Runnable {
+            override fun run() {
+                cursorVisible = !cursorVisible
+                if (!isEvaluated && currentInput.isNotEmpty()) {
+                    renderLcd(cursorVisible)
+                }
+                mainHandler.postDelayed(this, 500)
+            }
+        }
+        mainHandler.post(cursorRunnable)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        clockHandler.removeCallbacks(clockRunnable)
+        mainHandler.removeCallbacks(clockRunnable)
+        mainHandler.removeCallbacks(cursorRunnable)
     }
 
     private fun collectAllButtons() {
@@ -109,18 +123,17 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Direct 1-Click Copy on Result & 1-Click Paste on Expression
     private fun setupDirectCopyPaste() {
-        tvResult.setOnClickListener {
-            val text = tvResult.text.toString().trim()
-            if (text.isNotEmpty() && text != "0" && text != "Error") {
+        tvExpression.setOnClickListener {
+            val text = tvExpression.text.toString().replace("|", "").trim()
+            if (isEvaluated && text.isNotEmpty() && text != "Error") {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
                 Toast.makeText(this, "Copied: $text", Toast.LENGTH_SHORT).show()
             }
         }
 
-        tvExpression.setOnClickListener {
+        lcdScreen.setOnLongClickListener {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = clipboard.primaryClip
             if (clip != null && clip.itemCount > 0) {
@@ -135,9 +148,10 @@ class MainActivity : AppCompatActivity() {
                     }
                     currentInput.append(sanitized)
                     updateLcdLive()
-                    Toast.makeText(this, "Pasted into calculator", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
                 }
-            }
+                true
+            } else false
         }
     }
 
@@ -346,9 +360,8 @@ class MainActivity : AppCompatActivity() {
             currentInput.setLength(0)
             isEvaluated = false
             tvExpression.text = ""
-            tvResult.text = "0"
-            scaleDynamic(tvExpression, "", 46f)
-            scaleDynamic(tvResult, "0", 52f)
+            tvResult.text = ""
+            scaleDynamic(tvExpression, "", 48f)
         }
 
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener {
@@ -356,25 +369,24 @@ class MainActivity : AppCompatActivity() {
                 currentInput.setLength(0)
                 isEvaluated = false
                 tvExpression.text = ""
-                tvResult.text = "0"
-                scaleDynamic(tvExpression, "", 46f)
-                scaleDynamic(tvResult, "0", 52f)
+                tvResult.text = ""
+                scaleDynamic(tvExpression, "", 48f)
             } else if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateLcdLive()
             }
         }
 
+        // Real Calculator Behavior: Answer takes over the top display
         findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener {
             if (currentInput.isEmpty()) return@setOnClickListener
             val expr = currentInput.toString()
             val ans = solveMath(expr)
 
             if (ans != null && ans != "Error") {
-                tvExpression.text = expr
-                tvResult.text = ans
-                scaleDynamic(tvExpression, expr, 46f)
-                scaleDynamic(tvResult, ans, 52f)
+                tvExpression.text = ans
+                tvResult.text = ""
+                scaleDynamic(tvExpression, ans, 52f)
 
                 currentInput.setLength(0)
                 currentInput.append(ans)
@@ -382,8 +394,9 @@ class MainActivity : AppCompatActivity() {
 
                 bgExecutor.execute { saveHistory(expr, ans) }
             } else {
-                tvResult.text = "Error"
-                scaleDynamic(tvResult, "Error", 52f)
+                tvExpression.text = "Error"
+                tvResult.text = ""
+                scaleDynamic(tvExpression, "Error", 48f)
             }
         }
     }
@@ -409,32 +422,43 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateLcdLive() {
-        val s = currentInput.toString()
-        val textWithCursor = if (s.isNotEmpty()) "$s ❘" else ""
-        tvExpression.text = textWithCursor
-        scaleDynamic(tvExpression, textWithCursor, 46f)
+        renderLcd(cursorVisible)
+    }
 
-        if (s.isNotEmpty()) {
-            if (s == "." || s == "−") return
-            val preview = solveMath(s)
-            if (preview != null) {
-                tvResult.text = preview
-                scaleDynamic(tvResult, preview, 52f)
-            }
+    private fun renderLcd(showCursor: Boolean) {
+        val s = currentInput.toString()
+        if (s.isEmpty()) {
+            tvExpression.text = ""
+            tvResult.text = ""
+            return
+        }
+
+        val displayExpr = if (showCursor) "$s|" else s
+        tvExpression.text = displayExpr
+        scaleDynamic(tvExpression, s, 48f)
+
+        if (s == "." || s == "−") {
+            tvResult.text = ""
+            return
+        }
+        val preview = solveMath(s)
+        if (preview != null && preview != s) {
+            tvResult.text = preview
+            tvResult.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
+            tvResult.alpha = 0.65f
         } else {
-            tvResult.text = "0"
-            scaleDynamic(tvResult, "0", 52f)
+            tvResult.text = ""
         }
     }
 
     private fun scaleDynamic(textView: TextView, text: String, maxSp: Float) {
         val len = text.length
         val calculatedSp = when {
-            len <= 6 -> maxSp
-            len <= 10 -> maxSp - 6f
-            len <= 15 -> maxSp - 12f
-            len <= 20 -> maxSp - 18f
-            len <= 26 -> maxSp - 22f
+            len <= 5 -> maxSp
+            len <= 9 -> maxSp - 6f
+            len <= 14 -> maxSp - 12f
+            len <= 19 -> maxSp - 18f
+            len <= 25 -> maxSp - 24f
             else -> 20f
         }
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, calculatedSp)
@@ -464,11 +488,10 @@ class MainActivity : AppCompatActivity() {
                     if (part.isNotEmpty()) {
                         currentInput.setLength(0)
                         currentInput.append(part)
-                        tvExpression.text = ""
-                        tvResult.text = part
+                        tvExpression.text = part
+                        tvResult.text = ""
                         isEvaluated = true
-                        scaleDynamic(tvExpression, "", 46f)
-                        scaleDynamic(tvResult, part, 52f)
+                        scaleDynamic(tvExpression, part, 52f)
                     }
                 }
             }
