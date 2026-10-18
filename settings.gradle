@@ -1,0 +1,2 @@
+rootProject.name = "REX7-CALCULATOR"
+include ':app'

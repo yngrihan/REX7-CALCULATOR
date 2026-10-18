@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Nokia Retro Theme -->
+    <color name="nokia_body">#D8D3C3</color>
+    <color name="nokia_lcd">#8FA382</color>
+    <color name="nokia_lcd_text">#1D2B1A</color>
+    <color name="nokia_btn">#6E2633</color>
+    <color name="nokia_btn_action">#47171F</color>
+    <color name="nokia_btn_text">#F2EDE4</color>
+    <color name="nokia_badge">#47171F</color>
+
+    <!-- Dark Retro Theme -->
+    <color name="dark_body">#1E1E24</color>
+    <color name="dark_lcd">#2B3A2E</color>
+    <color name="dark_lcd_text">#66FF66</color>
+    <color name="dark_btn">#33333D</color>
+    <color name="dark_btn_action">#E65100</color>
+    <color name="dark_btn_text">#FFFFFF</color>
+    <color name="dark_badge">#FF9800</color>
+
+    <!-- Purple Pixel Theme -->
+    <color name="purple_body">#2D1B4E</color>
+    <color name="purple_lcd">#170D29</color>
+    <color name="purple_lcd_text">#00FFA3</color>
+    <color name="purple_btn">#4C2882</color>
+    <color name="purple_btn_action">#FF007F</color>
+    <color name="purple_btn_text">#FFFFFF</color>
+    <color name="purple_badge">#FF007F</color>
+</resources>

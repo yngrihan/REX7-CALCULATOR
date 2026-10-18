@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="RetroBtn" parent="Widget.MaterialComponents.Button">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">62dp</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:layout_margin">4dp</item>
+        <item name="android:textSize">20sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/nokia_btn_text</item>
+        <item name="backgroundTint">@color/nokia_btn</item>
+        <item name="cornerRadius">14dp</item>
+        <item name="elevation">4dp</item>
+    </style>
+</resources>
