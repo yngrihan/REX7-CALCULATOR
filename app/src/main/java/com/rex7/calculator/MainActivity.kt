@@ -316,7 +316,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        bindInstantTouch(R.id.btnEqual) {
+        findViewById<View>(R.id.btnEqual)?.setOnClickListener {
             if (currentInput.isEmpty()) return@bindInstantTouch
             val expr = currentInput.toString()
             val ans = solveMath(expr)
