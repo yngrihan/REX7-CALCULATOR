@@ -48,11 +48,12 @@
                 android:textSize="20sp" />
         </RelativeLayout>
 
+        <!-- Big LCD Screen Box -->
         <LinearLayout
             android:id="@+id/lcdBorderLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.15"
+            android:layout_weight="1.05"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="12dp"
             android:background="#2E2D28"
@@ -64,10 +65,10 @@
                 android:layout_height="match_parent"
                 android:background="#8BA664"
                 android:orientation="vertical"
-                android:paddingStart="14dp"
-                android:paddingTop="8dp"
-                android:paddingEnd="14dp"
-                android:paddingBottom="8dp">
+                android:paddingStart="16dp"
+                android:paddingTop="10dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="10dp">
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -92,6 +93,7 @@
                         android:textSize="14sp" />
                 </RelativeLayout>
 
+                <!-- Balanced Expression Size (Ab chhota nahi dikhega) -->
                 <TextView
                     android:id="@+id/tvExpression"
                     android:layout_width="match_parent"
@@ -99,12 +101,14 @@
                     android:layout_weight="1"
                     android:fontFamily="monospace"
                     android:gravity="start|center_vertical"
-                    android:letterSpacing="0.05"
+                    android:letterSpacing="0.06"
                     android:maxLines="2"
                     android:text=""
                     android:textColor="#182210"
-                    android:textSize="24sp" />
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
 
+                <!-- Final Result Amount -->
                 <TextView
                     android:id="@+id/tvResult"
                     android:layout_width="match_parent"
@@ -115,55 +119,56 @@
                     android:maxLines="1"
                     android:text="0"
                     android:textColor="#182210"
-                    android:textSize="48sp"
+                    android:textSize="44sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Compact Keypad Grid using AppCompatButton -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.45"
+            android:layout_weight="1.55"
             android:orientation="vertical">
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btnAC" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="AC" android:textSize="16sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnDel" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="DEL" android:textSize="14sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnToggleSign" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="±" android:textSize="18sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnPercent" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="%" android:textSize="18sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnAC" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="AC" android:textSize="16sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnDel" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="DEL" android:textSize="14sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnToggleSign" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="±" android:textSize="18sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnPercent" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="%" android:textSize="18sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="7" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="8" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="9" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnDivide" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="÷" android:textSize="22sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn7" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="7" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn8" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="8" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn9" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="9" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnDivide" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="÷" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="4" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="5" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="6" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnMultiply" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="×" android:textSize="22sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn4" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="4" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn5" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="5" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn6" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="6" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnMultiply" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="×" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="1" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="2" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="3" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnMinus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="−" android:textSize="22sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn1" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="1" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn2" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="2" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn3" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="3" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnMinus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="−" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
-                <Button android:id="@+id/btnParenOpen" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="(" android:textSize="18sp" android:textStyle="bold" />
-                <Button android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="0" android:textSize="20sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnParenClose" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text=")" android:textSize="18sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnPlus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="+" android:textSize="22sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnParenOpen" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="(" android:textSize="18sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btn0" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="0" android:textSize="20sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnParenClose" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text=")" android:textSize="18sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnPlus" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="+" android:textSize="22sp" android:textStyle="bold" />
             </LinearLayout>
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="0.95" android:orientation="horizontal">
-                <Button android:id="@+id/btnDot" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="." android:textSize="24sp" android:textStyle="bold" />
-                <Button android:id="@+id/btnEqual" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="3" android:layout_margin="3dp" android:text="=" android:textSize="28sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnDot" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="1" android:layout_margin="3dp" android:text="." android:textSize="24sp" android:textStyle="bold" />
+                <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnEqual" android:layout_width="0dp" android:layout_height="match_parent" android:layout_weight="3" android:layout_margin="3dp" android:text="=" android:textSize="28sp" android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

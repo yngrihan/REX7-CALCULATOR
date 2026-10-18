@@ -9,10 +9,10 @@ import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
-import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatButton
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnSettings: TextView
     private lateinit var btnHistory: TextView
 
-    private val allButtons = mutableListOf<Button>()
+    private val allButtons = mutableListOf<AppCompatButton>()
     private val currentInput = StringBuilder(64)
     private var lastCalculated = ""
     private val bgExecutor = Executors.newSingleThreadExecutor()
@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
 
-        tvLcdClock.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+        tvLcdClock.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
 
         collectAllButtons()
         bindKeyActions()
@@ -80,7 +80,10 @@ class MainActivity : AppCompatActivity() {
         )
         allButtons.clear()
         for (id in buttonIds) {
-            findViewById<Button>(id)?.let { allButtons.add(it) }
+            findViewById<AppCompatButton>(id)?.let {
+                it.backgroundTintList = null
+                allButtons.add(it)
+            }
         }
     }
 
@@ -93,7 +96,7 @@ class MainActivity : AppCompatActivity() {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = r
                 setColor(color)
-                setStroke((2 * density).toInt(), topBorder)
+                setStroke((2.2f * density).toInt(), topBorder)
             }
         }
 
@@ -125,7 +128,6 @@ class MainActivity : AppCompatActivity() {
 
         when (themeIndex) {
             0 -> {
-                // 1. Classic Nokia (Cream Body, Burgundy Keys)
                 chassisLayout.background = GradientDrawable().apply {
                     setColor(Color.parseColor("#E4D7C2"))
                     cornerRadius = chassisRadius
@@ -135,8 +137,8 @@ class MainActivity : AppCompatActivity() {
                 btnSettings.setTextColor(Color.parseColor("#26211C"))
 
                 val burgundy = Color.parseColor("#6A2222")
-                val burgundyPress = Color.parseColor("#4A1616")
-                val burgundyLight = Color.parseColor("#872F2F")
+                val burgundyPress = Color.parseColor("#421313")
+                val burgundyLight = Color.parseColor("#8A2D2D")
 
                 for (btn in allButtons) {
                     btn.background = makeBevel(burgundy, burgundyLight, burgundyPress, 12f)
@@ -144,22 +146,21 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             1 -> {
-                // 2. Dark Retro (Black Body, Dark Keys, Red AC & Red Equal)
                 chassisLayout.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#1C1E22"))
+                    setColor(Color.parseColor("#1A1C1F"))
                     cornerRadius = chassisRadius
-                    setStroke((3 * density).toInt(), Color.parseColor("#32353B"))
+                    setStroke((3 * density).toInt(), Color.parseColor("#2E3238"))
                 }
-                tvBrand.setTextColor(Color.parseColor("#FFFFFF"))
-                btnSettings.setTextColor(Color.parseColor("#FFFFFF"))
+                tvBrand.setTextColor(Color.WHITE)
+                btnSettings.setTextColor(Color.WHITE)
 
-                val darkBtn = Color.parseColor("#2B2E34")
-                val darkBtnPress = Color.parseColor("#1B1C20")
-                val darkBtnLight = Color.parseColor("#3D414A")
+                val darkBtn = Color.parseColor("#272A30")
+                val darkBtnPress = Color.parseColor("#17191C")
+                val darkBtnLight = Color.parseColor("#383C45")
 
-                val redBtn = Color.parseColor("#B33232")
-                val redBtnPress = Color.parseColor("#801F1F")
-                val redBtnLight = Color.parseColor("#D44848")
+                val redBtn = Color.parseColor("#BA2B2B")
+                val redBtnPress = Color.parseColor("#7D1717")
+                val redBtnLight = Color.parseColor("#DC3D3D")
 
                 for (btn in allButtons) {
                     if (btn.id == R.id.btnAC || btn.id == R.id.btnEqual) {
@@ -172,7 +173,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             2 -> {
-                // 3. Purple Pixel (Lavender Body, Purple Top Keys, White-Lavender Keys)
                 chassisLayout.background = GradientDrawable().apply {
                     setColor(Color.parseColor("#9B7EBD"))
                     cornerRadius = chassisRadius
@@ -182,12 +182,12 @@ class MainActivity : AppCompatActivity() {
                 btnSettings.setTextColor(Color.parseColor("#2B1540"))
 
                 val purpleBtn = Color.parseColor("#5A3E76")
-                val purpleBtnPress = Color.parseColor("#3E2856")
-                val purpleBtnLight = Color.parseColor("#755396")
+                val purpleBtnPress = Color.parseColor("#3B2550")
+                val purpleBtnLight = Color.parseColor("#77549A")
 
-                val whiteKey = Color.parseColor("#EFE5F7")
-                val whiteKeyPress = Color.parseColor("#CBB7E2")
-                val whiteKeyLight = Color.parseColor("#FFFFFF")
+                val whiteKey = Color.parseColor("#F0E6F7")
+                val whiteKeyPress = Color.parseColor("#CFBCE2")
+                val whiteKeyLight = Color.WHITE
 
                 for (btn in allButtons) {
                     when (btn.id) {
@@ -197,7 +197,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         else -> {
                             btn.background = makeBevel(whiteKey, whiteKeyLight, whiteKeyPress, 12f)
-                            btn.setTextColor(Color.parseColor("#2E1945"))
+                            btn.setTextColor(Color.parseColor("#2A143D"))
                         }
                     }
                 }
