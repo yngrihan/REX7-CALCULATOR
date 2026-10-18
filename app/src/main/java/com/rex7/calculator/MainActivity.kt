@@ -24,7 +24,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var lcdBorderLayout: LinearLayout
     private lateinit var lcdScreen: LinearLayout
     private lateinit var tvBrand: TextView
-    private lateinit var tvLcdFlag: TextView
     private lateinit var tvLcdClock: TextView
     private lateinit var tvExpression: TextView
     private lateinit var tvResult: TextView
@@ -49,7 +48,6 @@ class MainActivity : AppCompatActivity() {
         lcdBorderLayout = findViewById(R.id.lcdBorderLayout)
         lcdScreen = findViewById(R.id.lcdScreen)
         tvBrand = findViewById(R.id.tvBrand)
-        tvLcdFlag = findViewById(R.id.tvLcdFlag)
         tvLcdClock = findViewById(R.id.tvLcdClock)
         tvExpression = findViewById(R.id.tvExpression)
         tvResult = findViewById(R.id.tvResult)
@@ -123,7 +121,6 @@ class MainActivity : AppCompatActivity() {
         val lcdText = Color.parseColor("#182210")
         tvExpression.setTextColor(lcdText)
         tvResult.setTextColor(lcdText)
-        tvLcdFlag.setTextColor(lcdText)
         tvLcdClock.setTextColor(lcdText)
 
         when (themeIndex) {
@@ -187,7 +184,6 @@ class MainActivity : AppCompatActivity() {
 
                 val whiteKey = Color.parseColor("#F0E6F7")
                 val whiteKeyPress = Color.parseColor("#CFBCE2")
-                val whiteKeyLight = Color.WHITE
 
                 for (btn in allButtons) {
                     when (btn.id) {
@@ -196,7 +192,7 @@ class MainActivity : AppCompatActivity() {
                             btn.setTextColor(Color.WHITE)
                         }
                         else -> {
-                            btn.background = makeBevel(whiteKey, whiteKeyLight, whiteKeyPress, 12f)
+                            btn.background = makeBevel(whiteKey, Color.WHITE, whiteKeyPress, 12f)
                             btn.setTextColor(Color.parseColor("#2A143D"))
                         }
                     }
@@ -206,20 +202,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSettingsDialog() {
-        val themeNames = arrayOf(
-            "Classic Nokia (Default)",
-            "Dark Retro",
-            "Purple Pixel"
-        )
+        val themeNames = arrayOf("Classic Nokia (Default)", "Dark Retro", "Purple Pixel")
         AlertDialog.Builder(this)
             .setTitle("Select Calculator Theme")
             .setSingleChoiceItems(themeNames, currentTheme) { dialog, which ->
                 currentTheme = which
                 applyTheme(currentTheme)
-                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                    .edit()
-                    .putInt(KEY_THEME, currentTheme)
-                    .apply()
+                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putInt(KEY_THEME, currentTheme).apply()
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel", null)
@@ -246,7 +235,6 @@ class MainActivity : AppCompatActivity() {
             R.id.btn6 to '6', R.id.btn7 to '7', R.id.btn8 to '8',
             R.id.btn9 to '9', R.id.btnDot to '.'
         )
-
         for ((id, ch) in numberMap) {
             bindInstantTouch(id) {
                 currentInput.append(ch)
@@ -300,10 +288,7 @@ class MainActivity : AppCompatActivity() {
                 currentInput.setLength(0)
                 currentInput.append(ans)
                 lastCalculated = ans
-
-                bgExecutor.execute {
-                    saveHistory(expr, ans)
-                }
+                bgExecutor.execute { saveHistory(expr, ans) }
             } else {
                 tvResult.text = "Error"
             }
@@ -374,11 +359,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .setPositiveButton("Close", null)
-            .setNegativeButton("Clear All") { _, _ ->
-                bgExecutor.execute {
-                    prefs.edit().remove(KEY_HISTORY).apply()
-                }
-            }
+            .setNegativeButton("Clear All") { _, _ -> bgExecutor.execute { prefs.edit().remove(KEY_HISTORY).apply() } }
             .show()
     }
 

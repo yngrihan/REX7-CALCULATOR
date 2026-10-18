@@ -48,12 +48,12 @@
                 android:textSize="20sp" />
         </RelativeLayout>
 
-        <!-- Big LCD Screen Box -->
+        <!-- Big LCD Screen Box (M indicator removed for clean display) -->
         <LinearLayout
             android:id="@+id/lcdBorderLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.05"
+            android:layout_weight="1.1"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="12dp"
             android:background="#2E2D28"
@@ -74,26 +74,16 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
                     <TextView
-                        android:id="@+id/tvLcdFlag"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
-                        android:text="M"
-                        android:textColor="#182210"
-                        android:textSize="14sp"
-                        android:textStyle="bold" />
-                    <TextView
                         android:id="@+id/tvLcdClock"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:fontFamily="monospace"
-                        android:text="12:34"
+                        android:text="12:34 PM"
                         android:textColor="#182210"
                         android:textSize="14sp" />
                 </RelativeLayout>
 
-                <!-- Balanced Expression Size (Ab chhota nahi dikhega) -->
                 <TextView
                     android:id="@+id/tvExpression"
                     android:layout_width="match_parent"
@@ -108,7 +98,6 @@
                     android:textSize="32sp"
                     android:textStyle="bold" />
 
-                <!-- Final Result Amount -->
                 <TextView
                     android:id="@+id/tvResult"
                     android:layout_width="match_parent"
@@ -124,11 +113,11 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Compact Keypad Grid using AppCompatButton -->
+        <!-- Keypad Grid -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.55"
+            android:layout_weight="1.5"
             android:orientation="vertical">
 
             <LinearLayout android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:orientation="horizontal">
