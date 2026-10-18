@@ -53,7 +53,12 @@ class MainActivity : AppCompatActivity() {
     private val PREFS_NAME = "rex7_calc_prefs"
     private val KEY_THEME = "selected_theme_index"
     private val KEY_HISTORY = "history_entries"
+    private val KEY_SOUND_ENABLED = "sound_enabled"
+    private val KEY_SOUND_INDEX = "sound_index"
+
     private var currentTheme = 0
+    private var isSoundEnabled = true
+    private var currentSoundIndex = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,6 +76,11 @@ class MainActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
 
+        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        currentTheme = prefs.getInt(KEY_THEME, 0)
+        isSoundEnabled = prefs.getBoolean(KEY_SOUND_ENABLED, true)
+        currentSoundIndex = prefs.getInt(KEY_SOUND_INDEX, 0)
+
         startClockAndCursor()
         collectAllButtons()
         bindKeyActions()
@@ -79,8 +89,6 @@ class MainActivity : AppCompatActivity() {
         btnSettings.setOnClickListener { showSettingsDialog() }
         btnHistory.setOnClickListener { showHistoryDialog() }
 
-        val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        currentTheme = prefs.getInt(KEY_THEME, 0)
         applyTheme(currentTheme)
     }
 
@@ -111,6 +119,10 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         mainHandler.removeCallbacks(clockRunnable)
         mainHandler.removeCallbacks(cursorRunnable)
+    }
+
+    private fun triggerSound(view: View) {
+        SoundManager.play(this, view, currentSoundIndex, isSoundEnabled)
     }
 
     private fun collectAllButtons() {
@@ -309,6 +321,42 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showSettingsDialog() {
+        val soundState = if (isSoundEnabled) "ON" else "OFF"
+        val soundNames = arrayOf(
+            "1. Standard Tap",
+            "2. Mechanical Click",
+            "3. Retro Nokia Beep",
+            "4. Soft Bubble Pop",
+            "5. Typewriter Clack",
+            "6. Digital Bip",
+            "7. Subtle Wood Tap"
+        )
+        val options = arrayOf(
+            "🎨 Change Theme",
+            "🔊 Keypad Sound: $soundState",
+            "🎵 Select Sound Effect (${soundNames[currentSoundIndex]})"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("REX7 Settings")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showThemeDialog()
+                    1 -> {
+                        isSoundEnabled = !isSoundEnabled
+                        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                            .edit().putBoolean(KEY_SOUND_ENABLED, isSoundEnabled).apply()
+                        val state = if (isSoundEnabled) "Sound Turned ON" else "Sound Muted"
+                        Toast.makeText(this, state, Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> showSoundSelectionDialog(soundNames)
+                }
+            }
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
+    private fun showThemeDialog() {
         val themeNames = arrayOf("Classic Nokia (Green Screen)", "Dark Retro (White Screen)", "Purple Pixel (Lilac Screen)")
         AlertDialog.Builder(this)
             .setTitle("Select Calculator Theme")
@@ -316,6 +364,20 @@ class MainActivity : AppCompatActivity() {
                 currentTheme = which
                 applyTheme(currentTheme)
                 getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putInt(KEY_THEME, currentTheme).apply()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showSoundSelectionDialog(soundNames: Array<String>) {
+        AlertDialog.Builder(this)
+            .setTitle("Select Keypad Sound")
+            .setSingleChoiceItems(soundNames, currentSoundIndex) { dialog, which ->
+                currentSoundIndex = which
+                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit().putInt(KEY_SOUND_INDEX, currentSoundIndex).apply()
+                SoundManager.play(this, tvExpression, currentSoundIndex, true)
                 dialog.dismiss()
             }
             .setNegativeButton("Cancel", null)
@@ -330,7 +392,8 @@ class MainActivity : AppCompatActivity() {
             R.id.btn9 to '9', R.id.btnDot to '.'
         )
         for ((id, ch) in numberMap) {
-            findViewById<AppCompatButton>(id)?.setOnClickListener {
+            findViewById<AppCompatButton>(id)?.setOnClickListener { v ->
+                triggerSound(v)
                 if (isEvaluated) {
                     currentInput.setLength(0)
                     isEvaluated = false
@@ -340,22 +403,25 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<AppCompatButton>(R.id.btnPlus)?.setOnClickListener { appendOperator('+') }
-        findViewById<AppCompatButton>(R.id.btnMinus)?.setOnClickListener { appendOperator('−') }
-        findViewById<AppCompatButton>(R.id.btnMultiply)?.setOnClickListener { appendOperator('×') }
-        findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { appendOperator('÷') }
-        findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { appendOperator('%') }
-        findViewById<AppCompatButton>(R.id.btnParenOpen)?.setOnClickListener { 
+        findViewById<AppCompatButton>(R.id.btnPlus)?.setOnClickListener { v -> triggerSound(v); appendOperator('+') }
+        findViewById<AppCompatButton>(R.id.btnMinus)?.setOnClickListener { v -> triggerSound(v); appendOperator('−') }
+        findViewById<AppCompatButton>(R.id.btnMultiply)?.setOnClickListener { v -> triggerSound(v); appendOperator('×') }
+        findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { v -> triggerSound(v); appendOperator('÷') }
+        findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { v -> triggerSound(v); appendOperator('%') }
+        findViewById<AppCompatButton>(R.id.btnParenOpen)?.setOnClickListener { v ->
+            triggerSound(v)
             if (isEvaluated) { currentInput.setLength(0); isEvaluated = false }
             currentInput.append('(')
             updateLcdLive() 
         }
-        findViewById<AppCompatButton>(R.id.btnParenClose)?.setOnClickListener { 
+        findViewById<AppCompatButton>(R.id.btnParenClose)?.setOnClickListener { v ->
+            triggerSound(v)
             currentInput.append(')')
             updateLcdLive() 
         }
 
-        findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener {
+        findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener { v ->
+            triggerSound(v)
             val s = currentInput.toString()
             if (s.isNotEmpty()) {
                 if (s.startsWith("−")) {
@@ -367,7 +433,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<AppCompatButton>(R.id.btnAC)?.setOnClickListener {
+        findViewById<AppCompatButton>(R.id.btnAC)?.setOnClickListener { v ->
+            triggerSound(v)
             currentInput.setLength(0)
             isEvaluated = false
             tvExpression.text = ""
@@ -376,7 +443,8 @@ class MainActivity : AppCompatActivity() {
             scaleDynamic(tvExpression, "", 48f)
         }
 
-        findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener {
+        findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener { v ->
+            triggerSound(v)
             if (isEvaluated) {
                 currentInput.setLength(0)
                 isEvaluated = false
@@ -390,7 +458,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener {
+        findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener { v ->
+            triggerSound(v)
             if (currentInput.isEmpty()) return@setOnClickListener
             val expr = currentInput.toString()
             val ans = solveMath(expr)
