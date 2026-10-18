@@ -39,7 +39,6 @@ class MainActivity : AppCompatActivity() {
     private val PREFS_NAME = "rex7_calc_prefs"
     private val KEY_THEME = "selected_theme_index"
     private val KEY_HISTORY = "history_entries"
-
     private var currentTheme = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,7 +84,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun makeBevelDrawable(baseColor: Int, topBorder: Int, bottomBorder: Int, radiusDp: Float): StateListDrawable {
+    private fun makeBevel(baseColor: Int, topBorder: Int, bottomColor: Int, radiusDp: Float): StateListDrawable {
         val density = resources.displayMetrics.density
         val r = radiusDp * density
 
@@ -99,7 +98,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         return StateListDrawable().apply {
-            addState(intArrayOf(android.R.attr.state_pressed), createShape(bottomBorder))
+            addState(intArrayOf(android.R.attr.state_pressed), createShape(bottomColor))
             addState(intArrayOf(), createShape(baseColor))
         }
     }
@@ -109,8 +108,24 @@ class MainActivity : AppCompatActivity() {
         val chassisRadius = 18 * density
         val lcdRadius = 12 * density
 
+        lcdBorderLayout.background = GradientDrawable().apply {
+            setColor(Color.parseColor("#1B1C1A"))
+            cornerRadius = lcdRadius
+        }
+        lcdScreen.background = GradientDrawable().apply {
+            setColor(Color.parseColor("#8CA665"))
+            cornerRadius = (lcdRadius - 2 * density)
+        }
+
+        val lcdText = Color.parseColor("#182210")
+        tvExpression.setTextColor(lcdText)
+        tvResult.setTextColor(lcdText)
+        tvLcdFlag.setTextColor(lcdText)
+        tvLcdClock.setTextColor(lcdText)
+
         when (themeIndex) {
             0 -> {
+                // 1. Classic Nokia (Cream Body, Burgundy Keys)
                 chassisLayout.background = GradientDrawable().apply {
                     setColor(Color.parseColor("#E4D7C2"))
                     cornerRadius = chassisRadius
@@ -119,111 +134,71 @@ class MainActivity : AppCompatActivity() {
                 tvBrand.setTextColor(Color.parseColor("#26211C"))
                 btnSettings.setTextColor(Color.parseColor("#26211C"))
 
-                lcdBorderLayout.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#2E2D28"))
-                    cornerRadius = lcdRadius
-                }
-                lcdScreen.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#8DA469"))
-                    cornerRadius = (lcdRadius - 2 * density)
-                }
-
-                val lcdText = Color.parseColor("#1B2313")
-                tvExpression.setTextColor(lcdText)
-                tvResult.setTextColor(lcdText)
-                tvLcdFlag.setTextColor(lcdText)
-                tvLcdClock.setTextColor(lcdText)
-
-                val burgundy = Color.parseColor("#742525")
-                val burgundyPress = Color.parseColor("#531818")
-                val burgundyLight = Color.parseColor("#8E3232")
+                val burgundy = Color.parseColor("#6A2222")
+                val burgundyPress = Color.parseColor("#4A1616")
+                val burgundyLight = Color.parseColor("#872F2F")
 
                 for (btn in allButtons) {
-                    btn.background = makeBevelDrawable(burgundy, burgundyLight, burgundyPress, 12f)
+                    btn.background = makeBevel(burgundy, burgundyLight, burgundyPress, 12f)
                     btn.setTextColor(Color.parseColor("#F5EADB"))
                 }
             }
             1 -> {
+                // 2. Dark Retro (Black Body, Dark Keys, Red AC & Red Equal)
                 chassisLayout.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#1F2124"))
+                    setColor(Color.parseColor("#1C1E22"))
                     cornerRadius = chassisRadius
-                    setStroke((3 * density).toInt(), Color.parseColor("#383C42"))
+                    setStroke((3 * density).toInt(), Color.parseColor("#32353B"))
                 }
-                tvBrand.setTextColor(Color.parseColor("#ECEFF1"))
-                btnSettings.setTextColor(Color.parseColor("#ECEFF1"))
+                tvBrand.setTextColor(Color.parseColor("#FFFFFF"))
+                btnSettings.setTextColor(Color.parseColor("#FFFFFF"))
 
-                lcdBorderLayout.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#121315"))
-                    cornerRadius = lcdRadius
-                }
-                lcdScreen.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#87A868"))
-                    cornerRadius = (lcdRadius - 2 * density)
-                }
+                val darkBtn = Color.parseColor("#2B2E34")
+                val darkBtnPress = Color.parseColor("#1B1C20")
+                val darkBtnLight = Color.parseColor("#3D414A")
 
-                val lcdText = Color.parseColor("#142010")
-                tvExpression.setTextColor(lcdText)
-                tvResult.setTextColor(lcdText)
-                tvLcdFlag.setTextColor(lcdText)
-                tvLcdClock.setTextColor(lcdText)
-
-                val darkBtn = Color.parseColor("#2B2E33")
-                val darkBtnPress = Color.parseColor("#1B1C1F")
-                val darkBtnLight = Color.parseColor("#3D4249")
-
-                val redBtn = Color.parseColor("#A82D2D")
-                val redBtnPress = Color.parseColor("#7A1C1C")
-                val redBtnLight = Color.parseColor("#C73A3A")
+                val redBtn = Color.parseColor("#B33232")
+                val redBtnPress = Color.parseColor("#801F1F")
+                val redBtnLight = Color.parseColor("#D44848")
 
                 for (btn in allButtons) {
                     if (btn.id == R.id.btnAC || btn.id == R.id.btnEqual) {
-                        btn.background = makeBevelDrawable(redBtn, redBtnLight, redBtnPress, 12f)
+                        btn.background = makeBevel(redBtn, redBtnLight, redBtnPress, 12f)
+                        btn.setTextColor(Color.WHITE)
                     } else {
-                        btn.background = makeBevelDrawable(darkBtn, darkBtnLight, darkBtnPress, 12f)
+                        btn.background = makeBevel(darkBtn, darkBtnLight, darkBtnPress, 12f)
+                        btn.setTextColor(Color.parseColor("#EAEFF5"))
                     }
-                    btn.setTextColor(Color.parseColor("#E0E6ED"))
                 }
             }
             2 -> {
+                // 3. Purple Pixel (Lavender Body, Purple Top Keys, White-Lavender Number Keys)
                 chassisLayout.background = GradientDrawable().apply {
                     setColor(Color.parseColor("#9B7EBD"))
                     cornerRadius = chassisRadius
                     setStroke((3 * density).toInt(), Color.parseColor("#B49BCE"))
                 }
-                tvBrand.setTextColor(Color.parseColor("#28163B"))
-                btnSettings.setTextColor(Color.parseColor("#28163B"))
-
-                lcdBorderLayout.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#352349"))
-                    cornerRadius = lcdRadius
-                }
-                lcdScreen.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#8CA86D"))
-                    cornerRadius = (lcdRadius - 2 * density)
-                }
-
-                val lcdText = Color.parseColor("#1C2612")
-                tvExpression.setTextColor(lcdText)
-                tvResult.setTextColor(lcdText)
-                tvLcdFlag.setTextColor(lcdText)
-                tvLcdClock.setTextColor(lcdText)
+                tvBrand.setTextColor(Color.parseColor("#2B1540"))
+                btnSettings.setTextColor(Color.parseColor("#2B1540"))
 
                 val purpleBtn = Color.parseColor("#5A3E76")
-                val purpleBtnPress = Color.parseColor("#3F2856")
-                val purpleBtnLight = Color.parseColor("#745396")
+                val purpleBtnPress = Color.parseColor("#3E2856")
+                val purpleBtnLight = Color.parseColor("#755396")
 
-                val whiteKey = Color.parseColor("#EADEF7")
-                val whiteKeyPress = Color.parseColor("#C9B7E0")
+                val whiteKey = Color.parseColor("#EFE5F7")
+                val whiteKeyPress = Color.parseColor("#CBB7E2")
                 val whiteKeyLight = Color.parseColor("#FFFFFF")
 
                 for (btn in allButtons) {
-                    val id = btn.id
-                    if (id == R.id.btnAC || id == R.id.btnDel || id == R.id.btnToggleSign || id == R.id.btnPercent) {
-                        btn.background = makeBevelDrawable(purpleBtn, purpleBtnLight, purpleBtnPress, 12f)
-                        btn.setTextColor(Color.parseColor("#FFFFFF"))
-                    } else {
-                        btn.background = makeBevelDrawable(whiteKey, whiteKeyLight, whiteKeyPress, 12f)
-                        btn.setTextColor(Color.parseColor("#2E1945"))
+                    when (btn.id) {
+                        R.id.btnAC, R.id.btnDel, R.id.btnToggleSign, R.id.btnPercent -> {
+                            btn.background = makeBevel(purpleBtn, purpleBtnLight, purpleBtnPress, 12f)
+                            btn.setTextColor(Color.WHITE)
+                        }
+                        else -> {
+                            btn.background = makeBevel(whiteKey, whiteKeyLight, whiteKeyPress, 12f)
+                            btn.setTextColor(Color.parseColor("#2E1945"))
+                        }
                     }
                 }
             }
