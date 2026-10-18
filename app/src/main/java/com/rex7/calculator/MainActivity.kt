@@ -12,6 +12,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
 import android.view.View
+import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -30,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chassisLayout: LinearLayout
     private lateinit var lcdBorderLayout: LinearLayout
     private lateinit var lcdScreen: LinearLayout
+    private lateinit var scrollExpression: HorizontalScrollView
     private lateinit var tvBrand: TextView
     private lateinit var tvLcdClock: TextView
     private lateinit var tvExpression: TextView
@@ -60,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         chassisLayout = findViewById(R.id.chassisLayout)
         lcdBorderLayout = findViewById(R.id.lcdBorderLayout)
         lcdScreen = findViewById(R.id.lcdScreen)
+        scrollExpression = findViewById(R.id.scrollExpression)
         tvBrand = findViewById(R.id.tvBrand)
         tvLcdClock = findViewById(R.id.tvLcdClock)
         tvExpression = findViewById(R.id.tvExpression)
@@ -445,10 +448,8 @@ class MainActivity : AppCompatActivity() {
         cursorBar.visibility = View.VISIBLE
         scaleDynamic(tvExpression, s, 48f)
 
-        if (s == "." || s == "−") {
-            tvResult.text = ""
-            return
-        }
+        scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
+
         val preview = solveMath(s)
         if (preview != null && preview != s) {
             tvResult.text = preview
@@ -467,7 +468,7 @@ class MainActivity : AppCompatActivity() {
             len <= 14 -> maxSp - 12f
             len <= 19 -> maxSp - 18f
             len <= 25 -> maxSp - 24f
-            else -> 20f
+            else -> 22f
         }
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, calculatedSp)
     }
@@ -511,7 +512,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun solveMath(expr: String): String? {
         return try {
-            val sanitized = expr.replace('×', '*').replace('÷', '/').replace('−', '-')
+            var sanitized = expr.replace('×', '*').replace('÷', '/').replace('−', '-')
+            while (sanitized.isNotEmpty() && (sanitized.last() in "+-*/." || sanitized.last() == '%')) {
+                sanitized = sanitized.dropLast(1)
+            }
+            if (sanitized.isEmpty()) return null
+
             val res = MathParser(sanitized).eval()
             if (res.isNaN() || res.isInfinite()) null else formatDecimal(res)
         } catch (_: Exception) {

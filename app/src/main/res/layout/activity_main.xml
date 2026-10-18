@@ -83,34 +83,42 @@
                         android:textSize="12sp" />
                 </RelativeLayout>
 
-                <LinearLayout
+                <HorizontalScrollView
+                    android:id="@+id/scrollExpression"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
-                    android:gravity="end|center_vertical"
-                    android:orientation="horizontal">
+                    android:fillViewport="true"
+                    android:scrollbars="none">
 
-                    <TextView
-                        android:id="@+id/tvExpression"
+                    <LinearLayout
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:fontFamily="monospace"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="end"
                         android:gravity="end|center_vertical"
-                        android:letterSpacing="0.03"
-                        android:singleLine="true"
-                        android:text=""
-                        android:textColor="#182210"
-                        android:textSize="48sp"
-                        android:textStyle="bold" />
+                        android:orientation="horizontal">
 
-                    <View
-                        android:id="@+id/cursorBar"
-                        android:layout_width="3dp"
-                        android:layout_height="40dp"
-                        android:layout_marginStart="2dp"
-                        android:background="#182210"
-                        android:visibility="gone" />
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/tvExpression"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:fontFamily="monospace"
+                            android:gravity="end|center_vertical"
+                            android:letterSpacing="0.03"
+                            android:text=""
+                            android:textColor="#182210"
+                            android:textSize="48sp"
+                            android:textStyle="bold" />
+
+                        <View
+                            android:id="@+id/cursorBar"
+                            android:layout_width="3dp"
+                            android:layout_height="38dp"
+                            android:layout_marginStart="2dp"
+                            android:background="#182210"
+                            android:visibility="gone" />
+                    </LinearLayout>
+                </HorizontalScrollView>
 
                 <TextView
                     android:id="@+id/tvResult"
