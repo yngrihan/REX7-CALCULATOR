@@ -5,7 +5,6 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
@@ -67,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         startLiveClock()
         collectAllButtons()
         bindKeyActions()
-        setupClipboardControls()
+        setupDirectCopyPaste()
 
         btnSettings.setOnClickListener { showSettingsDialog() }
         btnHistory.setOnClickListener { showHistoryDialog() }
@@ -110,18 +109,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setupClipboardControls() {
-        tvResult.setOnLongClickListener {
-            val text = tvResult.text.toString()
-            if (text.isNotEmpty() && text != "Error") {
+    // Direct 1-Click Copy on Result & 1-Click Paste on Expression
+    private fun setupDirectCopyPaste() {
+        tvResult.setOnClickListener {
+            val text = tvResult.text.toString().trim()
+            if (text.isNotEmpty() && text != "0" && text != "Error") {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
-                Toast.makeText(this, "Result copied", Toast.LENGTH_SHORT).show()
-                true
-            } else false
+                Toast.makeText(this, "Copied: $text", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        tvExpression.setOnLongClickListener {
+        tvExpression.setOnClickListener {
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clip = clipboard.primaryClip
             if (clip != null && clip.itemCount > 0) {
@@ -136,10 +135,9 @@ class MainActivity : AppCompatActivity() {
                     }
                     currentInput.append(sanitized)
                     updateLcdLive()
-                    Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Pasted into calculator", Toast.LENGTH_SHORT).show()
                 }
-                true
-            } else false
+            }
         }
     }
 
@@ -349,8 +347,8 @@ class MainActivity : AppCompatActivity() {
             isEvaluated = false
             tvExpression.text = ""
             tvResult.text = "0"
-            measureAndScaleText(tvExpression, "", 42f, 18f)
-            measureAndScaleText(tvResult, "0", 50f, 22f)
+            scaleDynamic(tvExpression, "", 46f)
+            scaleDynamic(tvResult, "0", 52f)
         }
 
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener {
@@ -359,8 +357,8 @@ class MainActivity : AppCompatActivity() {
                 isEvaluated = false
                 tvExpression.text = ""
                 tvResult.text = "0"
-                measureAndScaleText(tvExpression, "", 42f, 18f)
-                measureAndScaleText(tvResult, "0", 50f, 22f)
+                scaleDynamic(tvExpression, "", 46f)
+                scaleDynamic(tvResult, "0", 52f)
             } else if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateLcdLive()
@@ -375,8 +373,8 @@ class MainActivity : AppCompatActivity() {
             if (ans != null && ans != "Error") {
                 tvExpression.text = expr
                 tvResult.text = ans
-                measureAndScaleText(tvExpression, expr, 42f, 18f)
-                measureAndScaleText(tvResult, ans, 50f, 22f)
+                scaleDynamic(tvExpression, expr, 46f)
+                scaleDynamic(tvResult, ans, 52f)
 
                 currentInput.setLength(0)
                 currentInput.append(ans)
@@ -385,7 +383,7 @@ class MainActivity : AppCompatActivity() {
                 bgExecutor.execute { saveHistory(expr, ans) }
             } else {
                 tvResult.text = "Error"
-                measureAndScaleText(tvResult, "Error", 50f, 22f)
+                scaleDynamic(tvResult, "Error", 52f)
             }
         }
     }
@@ -412,47 +410,34 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLcdLive() {
         val s = currentInput.toString()
-        val displayText = if (s.isNotEmpty()) "$s|" else ""
-        tvExpression.text = displayText
-        measureAndScaleText(tvExpression, displayText, 42f, 18f)
+        val textWithCursor = if (s.isNotEmpty()) "$s ❘" else ""
+        tvExpression.text = textWithCursor
+        scaleDynamic(tvExpression, textWithCursor, 46f)
 
         if (s.isNotEmpty()) {
             if (s == "." || s == "−") return
             val preview = solveMath(s)
             if (preview != null) {
                 tvResult.text = preview
-                measureAndScaleText(tvResult, preview, 50f, 22f)
+                scaleDynamic(tvResult, preview, 52f)
             }
         } else {
             tvResult.text = "0"
-            measureAndScaleText(tvResult, "0", 50f, 22f)
+            scaleDynamic(tvResult, "0", 52f)
         }
     }
 
-    private fun measureAndScaleText(textView: TextView, text: String, maxSp: Float, minSp: Float) {
-        if (text.isEmpty()) {
-            textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, maxSp)
-            return
+    private fun scaleDynamic(textView: TextView, text: String, maxSp: Float) {
+        val len = text.length
+        val calculatedSp = when {
+            len <= 6 -> maxSp
+            len <= 10 -> maxSp - 6f
+            len <= 15 -> maxSp - 12f
+            len <= 20 -> maxSp - 18f
+            len <= 26 -> maxSp - 22f
+            else -> 20f
         }
-
-        val availableWidth = (textView.width - textView.paddingStart - textView.paddingEnd).toFloat()
-        if (availableWidth <= 0f) {
-            textView.post { measureAndScaleText(textView, text, maxSp, minSp) }
-            return
-        }
-
-        val paint = Paint(textView.paint)
-        val density = resources.displayMetrics.scaledDensity
-
-        var currentSp = maxSp
-        while (currentSp > minSp) {
-            paint.textSize = currentSp * density
-            if (paint.measureText(text) <= availableWidth) {
-                break
-            }
-            currentSp -= 1.5f
-        }
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, currentSp)
+        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, calculatedSp)
     }
 
     private fun saveHistory(expr: String, ans: String) {
@@ -482,8 +467,8 @@ class MainActivity : AppCompatActivity() {
                         tvExpression.text = ""
                         tvResult.text = part
                         isEvaluated = true
-                        measureAndScaleText(tvExpression, "", 42f, 18f)
-                        measureAndScaleText(tvResult, part, 50f, 22f)
+                        scaleDynamic(tvExpression, "", 46f)
+                        scaleDynamic(tvResult, part, 52f)
                     }
                 }
             }

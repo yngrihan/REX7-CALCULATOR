@@ -15,7 +15,7 @@
         android:orientation="vertical"
         android:padding="14dp">
 
-        <!-- Top Header Bar -->
+        <!-- Top Header -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="32dp">
@@ -49,12 +49,12 @@
                 android:textSize="20sp" />
         </RelativeLayout>
 
-        <!-- Balanced LCD Screen Box (Weight balanced with keypad) -->
+        <!-- LCD Screen -->
         <LinearLayout
             android:id="@+id/lcdBorderLayout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="0.88"
+            android:layout_weight="0.85"
             android:layout_marginTop="6dp"
             android:layout_marginBottom="12dp"
             android:background="#2E2D28"
@@ -85,7 +85,7 @@
                         android:textSize="12sp" />
                 </RelativeLayout>
 
-                <!-- Expression (Right-aligned with auto-scaling) -->
+                <!-- Expression (Right Aligned, Extra Large for short text) -->
                 <TextView
                     android:id="@+id/tvExpression"
                     android:layout_width="match_parent"
@@ -95,14 +95,13 @@
                     android:gravity="end|center_vertical"
                     android:textAlignment="viewEnd"
                     android:letterSpacing="0.03"
-                    android:singleLine="true"
-                    android:ellipsize="start"
+                    android:maxLines="2"
                     android:text=""
                     android:textColor="#182210"
-                    android:textSize="40sp"
+                    android:textSize="44sp"
                     android:textStyle="bold" />
 
-                <!-- Result View (Bottom-Right anchored) -->
+                <!-- Final Result (Bottom Right) -->
                 <TextView
                     android:id="@+id/tvResult"
                     android:layout_width="match_parent"
@@ -112,15 +111,14 @@
                     android:textAlignment="viewEnd"
                     android:letterSpacing="0.04"
                     android:singleLine="true"
-                    android:ellipsize="none"
                     android:text="0"
                     android:textColor="#182210"
-                    android:textSize="48sp"
+                    android:textSize="52sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Keypad Grid -->
+        <!-- Keypad -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
