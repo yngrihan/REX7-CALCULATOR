@@ -18,9 +18,6 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.AppCompatButton
-import java.math.BigDecimal
-import java.math.MathContext
-import java.math.RoundingMode
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -41,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnHistory: TextView
 
     private val allButtons = mutableListOf<AppCompatButton>()
-    private val currentInput = StringBuilder(128)
+    private val currentInput = StringBuilder(512)
     private var isEvaluated = false
     private val bgExecutor = Executors.newSingleThreadExecutor()
 
@@ -84,7 +81,7 @@ class MainActivity : AppCompatActivity() {
         startClockAndCursor()
         collectAllButtons()
         bindKeyActions()
-        setupDirectCopyPaste()
+        setupClipboard()
 
         btnSettings.setOnClickListener { showSettingsDialog() }
         btnHistory.setOnClickListener { showHistoryDialog() }
@@ -140,38 +137,6 @@ class MainActivity : AppCompatActivity() {
                 it.backgroundTintList = null
                 allButtons.add(it)
             }
-        }
-    }
-
-    private fun setupDirectCopyPaste() {
-        tvExpression.setOnClickListener {
-            val text = tvExpression.text.toString().trim()
-            if (isEvaluated && text.isNotEmpty() && text != "Error") {
-                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
-                Toast.makeText(this, "Copied: $text", Toast.LENGTH_SHORT).show()
-            }
-        }
-
-        lcdScreen.setOnLongClickListener {
-            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = clipboard.primaryClip
-            if (clip != null && clip.itemCount > 0) {
-                val raw = clip.getItemAt(0).coerceToText(this).toString()
-                val sanitized = raw.replace("*", "×").replace("/", "÷").replace("-", "−")
-                    .filter { it in "0123456789+−×÷%.() " }.trim()
-
-                if (sanitized.isNotEmpty()) {
-                    if (isEvaluated) {
-                        currentInput.setLength(0)
-                        isEvaluated = false
-                    }
-                    currentInput.append(sanitized)
-                    updateLcdLive()
-                    Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
-                }
-                true
-            } else false
         }
     }
 
@@ -317,71 +282,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        updateLcdLive()
-    }
-
-    private fun showSettingsDialog() {
-        val soundState = if (isSoundEnabled) "ON" else "OFF"
-        val soundNames = arrayOf(
-            "1. Standard Tap",
-            "2. Mechanical Click",
-            "3. Retro Nokia Beep",
-            "4. Soft Bubble Pop",
-            "5. Typewriter Clack",
-            "6. Digital Bip",
-            "7. Subtle Wood Tap"
-        )
-        val options = arrayOf(
-            "🎨 Change Theme",
-            "🔊 Keypad Sound: $soundState",
-            "🎵 Select Sound Effect (${soundNames[currentSoundIndex]})"
-        )
-
-        AlertDialog.Builder(this)
-            .setTitle("REX7 Settings")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> showThemeDialog()
-                    1 -> {
-                        isSoundEnabled = !isSoundEnabled
-                        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                            .edit().putBoolean(KEY_SOUND_ENABLED, isSoundEnabled).apply()
-                        val state = if (isSoundEnabled) "Sound Turned ON" else "Sound Muted"
-                        Toast.makeText(this, state, Toast.LENGTH_SHORT).show()
-                    }
-                    2 -> showSoundSelectionDialog(soundNames)
-                }
-            }
-            .setPositiveButton("Close", null)
-            .show()
-    }
-
-    private fun showThemeDialog() {
-        val themeNames = arrayOf("Classic Nokia (Green Screen)", "Dark Retro (White Screen)", "Purple Pixel (Lilac Screen)")
-        AlertDialog.Builder(this)
-            .setTitle("Select Calculator Theme")
-            .setSingleChoiceItems(themeNames, currentTheme) { dialog, which ->
-                currentTheme = which
-                applyTheme(currentTheme)
-                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putInt(KEY_THEME, currentTheme).apply()
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
-
-    private fun showSoundSelectionDialog(soundNames: Array<String>) {
-        AlertDialog.Builder(this)
-            .setTitle("Select Keypad Sound")
-            .setSingleChoiceItems(soundNames, currentSoundIndex) { dialog, which ->
-                currentSoundIndex = which
-                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-                    .edit().putInt(KEY_SOUND_INDEX, currentSoundIndex).apply()
-                SoundManager.play(this, tvExpression, currentSoundIndex, true)
-                dialog.dismiss()
-            }
-            .setNegativeButton("Cancel", null)
-            .show()
     }
 
     private fun bindKeyActions() {
@@ -408,16 +308,19 @@ class MainActivity : AppCompatActivity() {
         findViewById<AppCompatButton>(R.id.btnMultiply)?.setOnClickListener { v -> triggerSound(v); appendOperator('×') }
         findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { v -> triggerSound(v); appendOperator('÷') }
         findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { v -> triggerSound(v); appendOperator('%') }
+
         findViewById<AppCompatButton>(R.id.btnParenOpen)?.setOnClickListener { v ->
             triggerSound(v)
             if (isEvaluated) { currentInput.setLength(0); isEvaluated = false }
             currentInput.append('(')
-            updateLcdLive() 
+            updateLcdLive()
         }
+
         findViewById<AppCompatButton>(R.id.btnParenClose)?.setOnClickListener { v ->
             triggerSound(v)
+            if (isEvaluated) isEvaluated = false
             currentInput.append(')')
-            updateLcdLive() 
+            updateLcdLive()
         }
 
         findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener { v ->
@@ -440,7 +343,7 @@ class MainActivity : AppCompatActivity() {
             tvExpression.text = ""
             cursorBar.visibility = View.GONE
             tvResult.text = ""
-            scaleDynamic(tvExpression, "", 48f)
+            tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
         }
 
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener { v ->
@@ -451,43 +354,42 @@ class MainActivity : AppCompatActivity() {
                 tvExpression.text = ""
                 cursorBar.visibility = View.GONE
                 tvResult.text = ""
-                scaleDynamic(tvExpression, "", 48f)
+                tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
             } else if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateLcdLive()
             }
         }
 
+        // Single-tap atomic calculation and display
         findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener { v ->
             triggerSound(v)
             if (currentInput.isEmpty()) return@setOnClickListener
             val expr = currentInput.toString()
-            val ans = solveMath(expr)
+            val ans = CalculationEngine.evaluate(expr, isLivePreview = false)
 
-            if (ans != null && ans != "Error") {
-                tvExpression.text = ans
-                cursorBar.visibility = View.GONE
-                tvResult.text = ""
-                scaleDynamic(tvExpression, ans, 52f)
-
+            if (ans != null) {
                 currentInput.setLength(0)
                 currentInput.append(ans)
                 isEvaluated = true
 
+                tvExpression.text = ans
+                cursorBar.visibility = View.GONE
+                tvResult.text = ""
+                applySmartFontSize(ans)
+
+                scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
                 bgExecutor.execute { saveHistory(expr, ans) }
             } else {
                 tvExpression.text = "Error"
                 cursorBar.visibility = View.GONE
                 tvResult.text = ""
-                scaleDynamic(tvExpression, "Error", 48f)
             }
         }
     }
 
     private fun appendOperator(op: Char) {
-        if (isEvaluated) {
-            isEvaluated = false
-        }
+        if (isEvaluated) isEvaluated = false
         if (currentInput.isEmpty()) {
             if (op == '−') {
                 currentInput.append('−')
@@ -510,36 +412,57 @@ class MainActivity : AppCompatActivity() {
             tvExpression.text = ""
             cursorBar.visibility = View.GONE
             tvResult.text = ""
+            tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
             return
         }
 
         tvExpression.text = s
         cursorBar.visibility = View.VISIBLE
-        scaleDynamic(tvExpression, s, 48f)
+        applySmartFontSize(s)
 
         scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
 
-        val preview = solveMath(s)
+        // Live calculated preview
+        val preview = CalculationEngine.evaluate(s, isLivePreview = true)
         if (preview != null && preview != s) {
             tvResult.text = preview
-            tvResult.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
+            val resLen = preview.length
+            val resSp = when {
+                resLen <= 10 -> 26f
+                resLen <= 15 -> 22f
+                resLen <= 20 -> 18f
+                else -> 15f
+            }
+            tvResult.setTextSize(TypedValue.COMPLEX_UNIT_SP, resSp)
             tvResult.alpha = 0.65f
         } else {
             tvResult.text = ""
         }
     }
 
-    private fun scaleDynamic(textView: TextView, text: String, maxSp: Float) {
-        val len = text.length
-        val calculatedSp = when {
-            len <= 5 -> maxSp
-            len <= 9 -> maxSp - 6f
-            len <= 14 -> maxSp - 12f
-            len <= 19 -> maxSp - 18f
-            len <= 25 -> maxSp - 24f
-            else -> 22f
+    // Dynamic gradual scaling based on available LCD viewport width
+    private fun applySmartFontSize(text: String) {
+        val availableWidth = scrollExpression.width - scrollExpression.paddingLeft - scrollExpression.paddingRight
+        val paint = tvExpression.paint
+
+        var targetSp = 48f
+        if (availableWidth > 0) {
+            while (targetSp > 26f) {
+                paint.textSize = targetSp * resources.displayMetrics.scaledDensity
+                if (paint.measureText(text) + 20f <= availableWidth) break
+                targetSp -= 2f
+            }
+        } else {
+            val len = text.length
+            targetSp = when {
+                len <= 8 -> 48f
+                len <= 12 -> 42f
+                len <= 16 -> 36f
+                len <= 22 -> 30f
+                else -> 26f
+            }
         }
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, calculatedSp)
+        tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, targetSp)
     }
 
     private fun saveHistory(expr: String, ans: String) {
@@ -570,108 +493,12 @@ class MainActivity : AppCompatActivity() {
                         cursorBar.visibility = View.GONE
                         tvResult.text = ""
                         isEvaluated = true
-                        scaleDynamic(tvExpression, part, 52f)
+                        applySmartFontSize(part)
                     }
                 }
             }
             .setPositiveButton("Close", null)
             .setNegativeButton("Clear All") { _, _ -> bgExecutor.execute { prefs.edit().remove(KEY_HISTORY).apply() } }
             .show()
-    }
-
-    private fun solveMath(expr: String): String? {
-        return try {
-            var sanitized = expr.replace('×', '*').replace('÷', '/').replace('−', '-')
-            while (sanitized.isNotEmpty() && (sanitized.last() in "+-*/." || sanitized.last() == '%')) {
-                sanitized = sanitized.dropLast(1)
-            }
-            if (sanitized.isEmpty()) return null
-
-            val res = MathParser(sanitized).eval()
-            if (res.isNaN() || res.isInfinite()) null else formatDecimal(res)
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    private fun formatDecimal(value: Double): String {
-        return try {
-            val bd = BigDecimal(value.toString(), MathContext(12, RoundingMode.HALF_UP))
-            val stripped = bd.stripTrailingZeros()
-            stripped.toPlainString()
-        } catch (_: Exception) {
-            if (value % 1.0 == 0.0) value.toLong().toString() else String.format(Locale.US, "%.6f", value).trimEnd('0').trimEnd('.')
-        }
-    }
-
-    private class MathParser(private val src: String) {
-        private var idx = -1
-        private var c = ' '
-
-        private fun advance() {
-            idx++
-            c = if (idx < src.length) src[idx] else '\u0000'
-        }
-
-        private fun eat(target: Char): Boolean {
-            while (c == ' ') advance()
-            if (c == target) {
-                advance()
-                return true
-            }
-            return false
-        }
-
-        fun eval(): Double {
-            advance()
-            val v = parseAddSub()
-            if (idx < src.length && c != '\u0000') return Double.NaN
-            return v
-        }
-
-        private fun parseAddSub(): Double {
-            var v = parseMulDiv()
-            while (true) {
-                when {
-                    eat('+') -> v += parseMulDiv()
-                    eat('-') -> v -= parseMulDiv()
-                    else -> return v
-                }
-            }
-        }
-
-        private fun parseMulDiv(): Double {
-            var v = parseFactor()
-            while (true) {
-                when {
-                    eat('*') -> v *= parseFactor()
-                    eat('/') -> {
-                        val d = parseFactor()
-                        v = if (d != 0.0) v / d else Double.NaN
-                    }
-                    else -> return v
-                }
-            }
-        }
-
-        private fun parseFactor(): Double {
-            if (eat('+')) return parseFactor()
-            if (eat('-')) return -parseFactor()
-
-            var v: Double
-            val start = idx
-            if (eat('(')) {
-                v = parseAddSub()
-                eat(')')
-            } else if ((c in '0'..'9') || c == '.') {
-                while ((c in '0'..'9') || c == '.') advance()
-                val sub = src.substring(start, idx)
-                v = if (sub == "." || sub.isEmpty()) 0.0 else sub.toDouble()
-            } else {
-                return 0.0
-            }
-            if (eat('%')) v /= 100.0
-            return v
-        }
     }
 }
