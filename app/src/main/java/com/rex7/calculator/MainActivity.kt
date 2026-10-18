@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
+import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvBrand: TextView
     private lateinit var tvLcdClock: TextView
     private lateinit var tvExpression: TextView
+    private lateinit var cursorBar: View
     private lateinit var tvResult: TextView
     private lateinit var btnSettings: TextView
     private lateinit var btnHistory: TextView
@@ -61,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         tvBrand = findViewById(R.id.tvBrand)
         tvLcdClock = findViewById(R.id.tvLcdClock)
         tvExpression = findViewById(R.id.tvExpression)
+        cursorBar = findViewById(R.id.cursorBar)
         tvResult = findViewById(R.id.tvResult)
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
@@ -89,9 +92,11 @@ class MainActivity : AppCompatActivity() {
 
         cursorRunnable = object : Runnable {
             override fun run() {
-                cursorVisible = !cursorVisible
                 if (!isEvaluated && currentInput.isNotEmpty()) {
-                    renderLcd(cursorVisible)
+                    cursorVisible = !cursorVisible
+                    cursorBar.visibility = if (cursorVisible) View.VISIBLE else View.INVISIBLE
+                } else {
+                    cursorBar.visibility = View.GONE
                 }
                 mainHandler.postDelayed(this, 500)
             }
@@ -125,7 +130,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDirectCopyPaste() {
         tvExpression.setOnClickListener {
-            val text = tvExpression.text.toString().replace("|", "").trim()
+            val text = tvExpression.text.toString().trim()
             if (isEvaluated && text.isNotEmpty() && text != "Error") {
                 val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                 clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
@@ -198,6 +203,7 @@ class MainActivity : AppCompatActivity() {
 
                 val lcdText = Color.parseColor("#15220F")
                 tvExpression.setTextColor(lcdText)
+                cursorBar.setBackgroundColor(lcdText)
                 tvResult.setTextColor(lcdText)
                 tvLcdClock.setTextColor(lcdText)
 
@@ -230,6 +236,7 @@ class MainActivity : AppCompatActivity() {
 
                 val darkLcdText = Color.parseColor("#111315")
                 tvExpression.setTextColor(darkLcdText)
+                cursorBar.setBackgroundColor(darkLcdText)
                 tvResult.setTextColor(darkLcdText)
                 tvLcdClock.setTextColor(darkLcdText)
 
@@ -271,6 +278,7 @@ class MainActivity : AppCompatActivity() {
 
                 val purpleLcdText = Color.parseColor("#220F33")
                 tvExpression.setTextColor(purpleLcdText)
+                cursorBar.setBackgroundColor(purpleLcdText)
                 tvResult.setTextColor(purpleLcdText)
                 tvLcdClock.setTextColor(purpleLcdText)
 
@@ -360,6 +368,7 @@ class MainActivity : AppCompatActivity() {
             currentInput.setLength(0)
             isEvaluated = false
             tvExpression.text = ""
+            cursorBar.visibility = View.GONE
             tvResult.text = ""
             scaleDynamic(tvExpression, "", 48f)
         }
@@ -369,6 +378,7 @@ class MainActivity : AppCompatActivity() {
                 currentInput.setLength(0)
                 isEvaluated = false
                 tvExpression.text = ""
+                cursorBar.visibility = View.GONE
                 tvResult.text = ""
                 scaleDynamic(tvExpression, "", 48f)
             } else if (currentInput.isNotEmpty()) {
@@ -377,7 +387,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Real Calculator Behavior: Answer takes over the top display
         findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener {
             if (currentInput.isEmpty()) return@setOnClickListener
             val expr = currentInput.toString()
@@ -385,6 +394,7 @@ class MainActivity : AppCompatActivity() {
 
             if (ans != null && ans != "Error") {
                 tvExpression.text = ans
+                cursorBar.visibility = View.GONE
                 tvResult.text = ""
                 scaleDynamic(tvExpression, ans, 52f)
 
@@ -395,6 +405,7 @@ class MainActivity : AppCompatActivity() {
                 bgExecutor.execute { saveHistory(expr, ans) }
             } else {
                 tvExpression.text = "Error"
+                cursorBar.visibility = View.GONE
                 tvResult.text = ""
                 scaleDynamic(tvExpression, "Error", 48f)
             }
@@ -422,19 +433,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateLcdLive() {
-        renderLcd(cursorVisible)
-    }
-
-    private fun renderLcd(showCursor: Boolean) {
         val s = currentInput.toString()
         if (s.isEmpty()) {
             tvExpression.text = ""
+            cursorBar.visibility = View.GONE
             tvResult.text = ""
             return
         }
 
-        val displayExpr = if (showCursor) "$s|" else s
-        tvExpression.text = displayExpr
+        // Text bilkul static rahega, bina kisi jhatke ke
+        tvExpression.text = s
+        cursorBar.visibility = View.VISIBLE
         scaleDynamic(tvExpression, s, 48f)
 
         if (s == "." || s == "−") {
@@ -454,11 +463,11 @@ class MainActivity : AppCompatActivity() {
     private fun scaleDynamic(textView: TextView, text: String, maxSp: Float) {
         val len = text.length
         val calculatedSp = when {
-            len <= 5 -> maxSp
-            len <= 9 -> maxSp - 6f
-            len <= 14 -> maxSp - 12f
-            len <= 19 -> maxSp - 18f
-            len <= 25 -> maxSp - 24f
+            len <= 5 -> maxSp          // 1, 1+1, 5+5 -> Extra Large
+            len <= 9 -> maxSp - 6f     // 1+1+1 -> 42sp
+            len <= 14 -> maxSp - 12f   // 36sp
+            len <= 19 -> maxSp - 18f   // 30sp
+            len <= 25 -> maxSp - 24f   // 24sp
             else -> 20f
         }
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, calculatedSp)
@@ -489,6 +498,7 @@ class MainActivity : AppCompatActivity() {
                         currentInput.setLength(0)
                         currentInput.append(part)
                         tvExpression.text = part
+                        cursorBar.visibility = View.GONE
                         tvResult.text = ""
                         isEvaluated = true
                         scaleDynamic(tvExpression, part, 52f)
