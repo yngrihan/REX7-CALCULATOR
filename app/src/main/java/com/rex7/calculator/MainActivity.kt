@@ -38,7 +38,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnHistory: TextView
 
     private val allButtons = mutableListOf<AppCompatButton>()
-    private val currentInput = StringBuilder(512)
+    private val currentInput = StringBuilder(256)
     private var isEvaluated = false
     private val bgExecutor = Executors.newSingleThreadExecutor()
 
@@ -138,6 +138,102 @@ class MainActivity : AppCompatActivity() {
                 allButtons.add(it)
             }
         }
+    }
+
+    private fun setupClipboard() {
+        tvExpression.setOnClickListener {
+            val text = tvExpression.text.toString().trim()
+            if (isEvaluated && text.isNotEmpty() && text != "Error") {
+                val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText("REX7 Result", text))
+                Toast.makeText(this, "Copied: $text", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        lcdScreen.setOnLongClickListener {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = clipboard.primaryClip
+            if (clip != null && clip.itemCount > 0) {
+                val raw = clip.getItemAt(0).coerceToText(this).toString()
+                val sanitized = raw.replace("*", "×").replace("/", "÷").replace("-", "−")
+                    .filter { it in "0123456789+−×÷%.() " }.trim()
+
+                if (sanitized.isNotEmpty()) {
+                    if (isEvaluated) {
+                        currentInput.setLength(0)
+                        isEvaluated = false
+                    }
+                    currentInput.append(sanitized)
+                    updateLcdLive()
+                    Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
+                }
+                true
+            } else false
+        }
+    }
+
+    private fun showSettingsDialog() {
+        val soundState = if (isSoundEnabled) "ON" else "OFF"
+        val soundNames = arrayOf(
+            "1. Standard Tap",
+            "2. Mechanical Click",
+            "3. Retro Nokia Beep",
+            "4. Soft Bubble Pop",
+            "5. Typewriter Clack",
+            "6. Digital Bip",
+            "7. Subtle Wood Tap"
+        )
+        val options = arrayOf(
+            "🎨 Change Theme",
+            "🔊 Keypad Sound: $soundState",
+            "🎵 Select Sound Effect (${soundNames[currentSoundIndex]})"
+        )
+
+        AlertDialog.Builder(this)
+            .setTitle("REX7 Settings")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> showThemeDialog()
+                    1 -> {
+                        isSoundEnabled = !isSoundEnabled
+                        getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                            .edit().putBoolean(KEY_SOUND_ENABLED, isSoundEnabled).apply()
+                        val state = if (isSoundEnabled) "Sound Turned ON" else "Sound Muted"
+                        Toast.makeText(this, state, Toast.LENGTH_SHORT).show()
+                    }
+                    2 -> showSoundSelectionDialog(soundNames)
+                }
+            }
+            .setPositiveButton("Close", null)
+            .show()
+    }
+
+    private fun showThemeDialog() {
+        val themeNames = arrayOf("Classic Nokia (Green Screen)", "Dark Retro (White Screen)", "Purple Pixel (Lilac Screen)")
+        AlertDialog.Builder(this)
+            .setTitle("Select Calculator Theme")
+            .setSingleChoiceItems(themeNames, currentTheme) { dialog, which ->
+                currentTheme = which
+                applyTheme(currentTheme)
+                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE).edit().putInt(KEY_THEME, currentTheme).apply()
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun showSoundSelectionDialog(soundNames: Array<String>) {
+        AlertDialog.Builder(this)
+            .setTitle("Select Keypad Sound")
+            .setSingleChoiceItems(soundNames, currentSoundIndex) { dialog, which ->
+                currentSoundIndex = which
+                getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                    .edit().putInt(KEY_SOUND_INDEX, currentSoundIndex).apply()
+                SoundManager.play(this, tvExpression, currentSoundIndex, true)
+                dialog.dismiss()
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun makeBevel(baseColor: Int, topBorder: Int, bottomColor: Int, radiusDp: Float): StateListDrawable {
@@ -282,6 +378,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        updateLcdLive()
     }
 
     private fun bindKeyActions() {
@@ -361,7 +458,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Single-tap atomic calculation and display
         findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener { v ->
             triggerSound(v)
             if (currentInput.isEmpty()) return@setOnClickListener
@@ -422,7 +518,6 @@ class MainActivity : AppCompatActivity() {
 
         scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
 
-        // Live calculated preview
         val preview = CalculationEngine.evaluate(s, isLivePreview = true)
         if (preview != null && preview != s) {
             tvResult.text = preview
@@ -440,7 +535,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Dynamic gradual scaling based on available LCD viewport width
     private fun applySmartFontSize(text: String) {
         val availableWidth = scrollExpression.width - scrollExpression.paddingLeft - scrollExpression.paddingRight
         val paint = tvExpression.paint
