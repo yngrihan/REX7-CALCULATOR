@@ -1,6 +1,5 @@
 package com.rex7.calculator
 
-import android.annotation.SuppressLint
 import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -10,9 +9,9 @@ import android.graphics.Paint
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.TypedValue
-import android.view.MotionEvent
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
@@ -40,7 +39,11 @@ class MainActivity : AppCompatActivity() {
 
     private val allButtons = mutableListOf<AppCompatButton>()
     private val currentInput = StringBuilder(128)
+    private var isEvaluated = false
     private val bgExecutor = Executors.newSingleThreadExecutor()
+
+    private val clockHandler = Handler(Looper.getMainLooper())
+    private lateinit var clockRunnable: Runnable
 
     private val PREFS_NAME = "rex7_calc_prefs"
     private val KEY_THEME = "selected_theme_index"
@@ -61,8 +64,7 @@ class MainActivity : AppCompatActivity() {
         btnSettings = findViewById(R.id.btnSettings)
         btnHistory = findViewById(R.id.btnHistory)
 
-        tvLcdClock.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
-
+        startLiveClock()
         collectAllButtons()
         bindKeyActions()
         setupClipboardControls()
@@ -73,6 +75,21 @@ class MainActivity : AppCompatActivity() {
         val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         currentTheme = prefs.getInt(KEY_THEME, 0)
         applyTheme(currentTheme)
+    }
+
+    private fun startLiveClock() {
+        clockRunnable = object : Runnable {
+            override fun run() {
+                tvLcdClock.text = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+                clockHandler.postDelayed(this, 1000)
+            }
+        }
+        clockHandler.post(clockRunnable)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        clockHandler.removeCallbacks(clockRunnable)
     }
 
     private fun collectAllButtons() {
@@ -113,11 +130,13 @@ class MainActivity : AppCompatActivity() {
                     .filter { it in "0123456789+−×÷%.() " }.trim()
 
                 if (sanitized.isNotEmpty()) {
+                    if (isEvaluated) {
+                        currentInput.setLength(0)
+                        isEvaluated = false
+                    }
                     currentInput.append(sanitized)
                     updateLcdLive()
                     Toast.makeText(this, "Pasted", Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(this, "No valid expression to paste", Toast.LENGTH_SHORT).show()
                 }
                 true
             } else false
@@ -127,7 +146,6 @@ class MainActivity : AppCompatActivity() {
     private fun makeBevel(baseColor: Int, topBorder: Int, bottomColor: Int, radiusDp: Float): StateListDrawable {
         val density = resources.displayMetrics.density
         val r = radiusDp * density
-
         fun createShape(color: Int): GradientDrawable {
             return GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
@@ -136,7 +154,6 @@ class MainActivity : AppCompatActivity() {
                 setStroke((2.2f * density).toInt(), topBorder)
             }
         }
-
         return StateListDrawable().apply {
             addState(intArrayOf(android.R.attr.state_pressed), createShape(bottomColor))
             addState(intArrayOf(), createShape(baseColor))
@@ -148,20 +165,6 @@ class MainActivity : AppCompatActivity() {
         val chassisRadius = 18 * density
         val lcdRadius = 12 * density
 
-        lcdBorderLayout.background = GradientDrawable().apply {
-            setColor(Color.parseColor("#1B1C1A"))
-            cornerRadius = lcdRadius
-        }
-        lcdScreen.background = GradientDrawable().apply {
-            setColor(Color.parseColor("#8CA665"))
-            cornerRadius = (lcdRadius - 2 * density)
-        }
-
-        val lcdText = Color.parseColor("#182210")
-        tvExpression.setTextColor(lcdText)
-        tvResult.setTextColor(lcdText)
-        tvLcdClock.setTextColor(lcdText)
-
         when (themeIndex) {
             0 -> {
                 chassisLayout.background = GradientDrawable().apply {
@@ -171,6 +174,20 @@ class MainActivity : AppCompatActivity() {
                 }
                 tvBrand.setTextColor(Color.parseColor("#26211C"))
                 btnSettings.setTextColor(Color.parseColor("#26211C"))
+
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#2E2D28"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#8FA866"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val lcdText = Color.parseColor("#15220F")
+                tvExpression.setTextColor(lcdText)
+                tvResult.setTextColor(lcdText)
+                tvLcdClock.setTextColor(lcdText)
 
                 val burgundy = Color.parseColor("#6A2222")
                 val burgundyPress = Color.parseColor("#421313")
@@ -183,12 +200,26 @@ class MainActivity : AppCompatActivity() {
             }
             1 -> {
                 chassisLayout.background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#1A1C1F"))
+                    setColor(Color.parseColor("#16181B"))
                     cornerRadius = chassisRadius
-                    setStroke((3 * density).toInt(), Color.parseColor("#2E3238"))
+                    setStroke((3 * density).toInt(), Color.parseColor("#2A2E35"))
                 }
                 tvBrand.setTextColor(Color.WHITE)
                 btnSettings.setTextColor(Color.WHITE)
+
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#0C0E10"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#EAEFEA"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val darkLcdText = Color.parseColor("#111315")
+                tvExpression.setTextColor(darkLcdText)
+                tvResult.setTextColor(darkLcdText)
+                tvLcdClock.setTextColor(darkLcdText)
 
                 val darkBtn = Color.parseColor("#272A30")
                 val darkBtnPress = Color.parseColor("#17191C")
@@ -217,10 +248,23 @@ class MainActivity : AppCompatActivity() {
                 tvBrand.setTextColor(Color.parseColor("#2B1540"))
                 btnSettings.setTextColor(Color.parseColor("#2B1540"))
 
+                lcdBorderLayout.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#3C2454"))
+                    cornerRadius = lcdRadius
+                }
+                lcdScreen.background = GradientDrawable().apply {
+                    setColor(Color.parseColor("#EFE7F7"))
+                    cornerRadius = (lcdRadius - 2 * density)
+                }
+
+                val purpleLcdText = Color.parseColor("#220F33")
+                tvExpression.setTextColor(purpleLcdText)
+                tvResult.setTextColor(purpleLcdText)
+                tvLcdClock.setTextColor(purpleLcdText)
+
                 val purpleBtn = Color.parseColor("#5A3E76")
                 val purpleBtnPress = Color.parseColor("#3B2550")
                 val purpleBtnLight = Color.parseColor("#77549A")
-
                 val whiteKey = Color.parseColor("#F0E6F7")
                 val whiteKeyPress = Color.parseColor("#CFBCE2")
 
@@ -238,10 +282,11 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        updateLcdLive()
     }
 
     private fun showSettingsDialog() {
-        val themeNames = arrayOf("Classic Nokia (Default)", "Dark Retro", "Purple Pixel")
+        val themeNames = arrayOf("Classic Nokia (Green Screen)", "Dark Retro (White Screen)", "Purple Pixel (Lilac Screen)")
         AlertDialog.Builder(this)
             .setTitle("Select Calculator Theme")
             .setSingleChoiceItems(themeNames, currentTheme) { dialog, which ->
@@ -254,19 +299,6 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    @SuppressLint("ClickableViewAccessibility")
-    private fun bindInstantTouch(id: Int, onAction: () -> Unit) {
-        findViewById<View>(id)?.setOnTouchListener { v, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                v.isPressed = true
-                onAction()
-            } else if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
-                v.isPressed = false
-            }
-            true
-        }
-    }
-
     private fun bindKeyActions() {
         val numberMap = listOf(
             R.id.btn0 to '0', R.id.btn1 to '1', R.id.btn2 to '2',
@@ -275,21 +307,32 @@ class MainActivity : AppCompatActivity() {
             R.id.btn9 to '9', R.id.btnDot to '.'
         )
         for ((id, ch) in numberMap) {
-            bindInstantTouch(id) {
+            findViewById<AppCompatButton>(id)?.setOnClickListener {
+                if (isEvaluated) {
+                    currentInput.setLength(0)
+                    isEvaluated = false
+                }
                 currentInput.append(ch)
                 updateLcdLive()
             }
         }
 
-        bindInstantTouch(R.id.btnPlus) { appendOperator('+') }
-        bindInstantTouch(R.id.btnMinus) { appendOperator('−') }
-        bindInstantTouch(R.id.btnMultiply) { appendOperator('×') }
-        bindInstantTouch(R.id.btnDivide) { appendOperator('÷') }
-        bindInstantTouch(R.id.btnPercent) { appendOperator('%') }
-        bindInstantTouch(R.id.btnParenOpen) { currentInput.append('('); updateLcdLive() }
-        bindInstantTouch(R.id.btnParenClose) { currentInput.append(')'); updateLcdLive() }
+        findViewById<AppCompatButton>(R.id.btnPlus)?.setOnClickListener { appendOperator('+') }
+        findViewById<AppCompatButton>(R.id.btnMinus)?.setOnClickListener { appendOperator('−') }
+        findViewById<AppCompatButton>(R.id.btnMultiply)?.setOnClickListener { appendOperator('×') }
+        findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { appendOperator('÷') }
+        findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { appendOperator('%') }
+        findViewById<AppCompatButton>(R.id.btnParenOpen)?.setOnClickListener { 
+            if (isEvaluated) { currentInput.setLength(0); isEvaluated = false }
+            currentInput.append('(')
+            updateLcdLive() 
+        }
+        findViewById<AppCompatButton>(R.id.btnParenClose)?.setOnClickListener { 
+            currentInput.append(')')
+            updateLcdLive() 
+        }
 
-        bindInstantTouch(R.id.btnToggleSign) {
+        findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener {
             val s = currentInput.toString()
             if (s.isNotEmpty()) {
                 if (s.startsWith("−")) {
@@ -301,44 +344,56 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        bindInstantTouch(R.id.btnAC) {
+        findViewById<AppCompatButton>(R.id.btnAC)?.setOnClickListener {
             currentInput.setLength(0)
+            isEvaluated = false
             tvExpression.text = ""
             tvResult.text = "0"
-            measureAndScaleText(tvExpression, "", 34f, 16f)
-            measureAndScaleText(tvResult, "0", 46f, 22f)
+            measureAndScaleText(tvExpression, "", 42f, 18f)
+            measureAndScaleText(tvResult, "0", 50f, 22f)
         }
 
-        bindInstantTouch(R.id.btnDel) {
-            if (currentInput.isNotEmpty()) {
+        findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener {
+            if (isEvaluated) {
+                currentInput.setLength(0)
+                isEvaluated = false
+                tvExpression.text = ""
+                tvResult.text = "0"
+                measureAndScaleText(tvExpression, "", 42f, 18f)
+                measureAndScaleText(tvResult, "0", 50f, 22f)
+            } else if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateLcdLive()
             }
         }
 
-        findViewById<View>(R.id.btnEqual)?.setOnClickListener {
-            if (currentInput.isEmpty()) return@bindInstantTouch
+        findViewById<AppCompatButton>(R.id.btnEqual)?.setOnClickListener {
+            if (currentInput.isEmpty()) return@setOnClickListener
             val expr = currentInput.toString()
             val ans = solveMath(expr)
 
             if (ans != null && ans != "Error") {
                 tvExpression.text = expr
                 tvResult.text = ans
-                measureAndScaleText(tvExpression, expr, 34f, 16f)
-                measureAndScaleText(tvResult, ans, 46f, 22f)
+                measureAndScaleText(tvExpression, expr, 42f, 18f)
+                measureAndScaleText(tvResult, ans, 50f, 22f)
 
                 currentInput.setLength(0)
                 currentInput.append(ans)
+                isEvaluated = true
 
                 bgExecutor.execute { saveHistory(expr, ans) }
             } else {
                 tvResult.text = "Error"
-                measureAndScaleText(tvResult, "Error", 46f, 22f)
+                measureAndScaleText(tvResult, "Error", 50f, 22f)
             }
         }
     }
 
     private fun appendOperator(op: Char) {
+        if (isEvaluated) {
+            isEvaluated = false
+        }
         if (currentInput.isEmpty()) {
             if (op == '−') {
                 currentInput.append('−')
@@ -357,19 +412,20 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateLcdLive() {
         val s = currentInput.toString()
-        tvExpression.text = s
-        measureAndScaleText(tvExpression, s, 34f, 16f)
+        val displayText = if (s.isNotEmpty()) "$s|" else ""
+        tvExpression.text = displayText
+        measureAndScaleText(tvExpression, displayText, 42f, 18f)
 
         if (s.isNotEmpty()) {
             if (s == "." || s == "−") return
             val preview = solveMath(s)
             if (preview != null) {
                 tvResult.text = preview
-                measureAndScaleText(tvResult, preview, 46f, 22f)
+                measureAndScaleText(tvResult, preview, 50f, 22f)
             }
         } else {
             tvResult.text = "0"
-            measureAndScaleText(tvResult, "0", 46f, 22f)
+            measureAndScaleText(tvResult, "0", 50f, 22f)
         }
     }
 
@@ -425,8 +481,9 @@ class MainActivity : AppCompatActivity() {
                         currentInput.append(part)
                         tvExpression.text = ""
                         tvResult.text = part
-                        measureAndScaleText(tvExpression, "", 34f, 16f)
-                        measureAndScaleText(tvResult, part, 46f, 22f)
+                        isEvaluated = true
+                        measureAndScaleText(tvExpression, "", 42f, 18f)
+                        measureAndScaleText(tvResult, part, 50f, 22f)
                     }
                 }
             }
