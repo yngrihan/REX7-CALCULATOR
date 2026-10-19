@@ -38,7 +38,9 @@ object SoundManager {
         "sound_baburao",              // 17 (Dialog: 25)
         "sound_r2h_abesaale",         // 18 (Dialog: 26)
         "sound_r2h_scream",           // 19 (Dialog: 27)
-        "sound_r2h_bhaago"            // 20 (Dialog: 28)
+        "sound_r2h_bhaago",           // 20 (Dialog: 28)
+        "sound_vlog_funny",           // 21 (Dialog: 29)
+        "sound_main_hoon"             // 22 (Dialog: 30)
     )
 
     fun initPool(context: Context) {
@@ -74,7 +76,6 @@ object SoundManager {
         initPool(context)
         val sp = soundPool ?: return
 
-        // = button: Khatam Bye Bye ya Jalwa Hai Hamara ka jabardast finish
         if (isEquals && soundIndex >= 7) {
             val khatamId = memeMap[12]
             val jalwaId = memeMap[13]
@@ -86,18 +87,15 @@ object SoundManager {
         }
 
         when (soundIndex) {
-            // --- 0..6: Purane 7 Classic Sounds ---
             0 -> {
                 try { view.playSoundEffect(SoundEffectConstants.CLICK) } catch (_: Exception) {}
             }
-            1 -> playTone(1200, 25, 0.6) // Mechanical Click
-            2 -> playTone(950, 40, 0.45) // Retro Nokia Beep
-            3 -> playTone(450, 30, 0.8)  // Soft Bubble Pop
-            4 -> playTone(280, 20, 0.7)  // Typewriter Clack
-            5 -> playTone(1800, 35, 0.4) // Digital Bip
-            6 -> playTone(160, 25, 0.9)  // Subtle Wood Tap
-
-            // --- 7: Random Mix (Saare Memes) ---
+            1 -> playTone(1200, 25, 0.6)
+            2 -> playTone(950, 40, 0.45)
+            3 -> playTone(450, 30, 0.8)
+            4 -> playTone(280, 20, 0.7)
+            5 -> playTone(1800, 35, 0.4)
+            6 -> playTone(160, 25, 0.9)
             7 -> {
                 val available = memeMap.values.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
@@ -105,9 +103,7 @@ object SoundManager {
                     sp.play(sId, 1f, 1f, 1, 0, 1f)
                 }
             }
-
-            // --- 8..28: Har Ek Individual Viral Sound ---
-            in 8..28 -> {
+            in 8..30 -> {
                 val mappedIdx = soundIndex - 8
                 val sId = memeMap[mappedIdx]
                 if (sId != null && loadedSounds.contains(sId)) {
@@ -123,13 +119,11 @@ object SoundManager {
                 val sampleRate = 44100
                 val numSamples = (sampleRate * (durationMs / 1000.0)).toInt()
                 val buffer = ShortArray(numSamples)
-
                 for (i in 0 until numSamples) {
                     val angle = 2.0 * Math.PI * i / (sampleRate / freqHz.toDouble())
                     val envelope = 1.0 - (i.toDouble() / numSamples)
                     buffer[i] = (Math.sin(angle) * Short.MAX_VALUE * volume * envelope).toInt().toShort()
                 }
-
                 val track = AudioTrack.Builder()
                     .setAudioAttributes(
                         AudioAttributes.Builder()
@@ -147,7 +141,6 @@ object SoundManager {
                     .setBufferSizeInBytes(buffer.size * 2)
                     .setTransferMode(AudioTrack.MODE_STATIC)
                     .build()
-
                 track.write(buffer, 0, buffer.size)
                 track.play()
                 Thread.sleep(durationMs.toLong() + 20)

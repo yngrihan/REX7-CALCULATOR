@@ -287,16 +287,18 @@ class MainActivity : AppCompatActivity() {
             "🎵 Tu Du Ta Nei (Viral Boy)",
             "🗿 Moye Moye",
             "💀 Bruh",
-            "🥺 Hum Gareeb Hain (Viral)",
-            "👋 Khatam Bye Bye Tata",
-            "🔥 Jalwa Hai Hamara",
-            "🕶️ Arpit Bala (Bhai Tu Hai Kaun)",
+            "🥺 Mujhe Maaf Kardo (Arpit Bala)",
+            "👋 Khatam / Jaldi Hato",
+            "🔥 Jalwa / Baigan",
+            "🕶️ Bhai Yaha Kya Ho Raha Hai (Arpit Bala)",
             "🕺 Tunak Tunak Tun (Viral Beat)",
             "😈 Akshay Kumar Laugh (Hehehe)",
             "👓 Baburao (Utha Le Re Deva)",
-            "🥊 R2H - Abe Saale!",
+            "🥊 Abe Tu Hai Kaun (R2H/Compilation)",
             "😱 R2H - Scream (Kya Kar Raha Hai)",
-            "🏃 R2H - Bhaago Bhaago!"
+            "🏃 R2H - Bhaago Bhaago!",
+            "🥁 Dhinka Chika / Vlog Beat",
+            "😎 Main Hoon Bhai (Viral Vlog)"
         )
         val options = arrayOf(
             "🎨 Change Theme",
