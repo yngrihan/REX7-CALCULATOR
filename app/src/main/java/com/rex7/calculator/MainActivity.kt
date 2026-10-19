@@ -275,7 +275,7 @@ class MainActivity : AppCompatActivity() {
             "5. Typewriter Clack",
             "6. Digital Bip",
             "7. Subtle Wood Tap",
-            "🎲 Random Mix (All Memes)",
+            "🎲 Random Mix (Sab Memes Ek Sath)",
             "💀 FAHHH",
             "😱 Are Baap Re!",
             "😲 Oh My God!",
@@ -284,9 +284,19 @@ class MainActivity : AppCompatActivity() {
             "💔 Emotional Damage",
             "⚽ SUIIIII",
             "🤣 OMG Ha Ha Ha",
-            "🎵 Tu Du Ta Nei",
+            "🎵 Tu Du Ta Nei (Viral Boy)",
             "🗿 Moye Moye",
-            "💀 Bruh"
+            "💀 Bruh",
+            "🥺 Hum Gareeb Hain (Viral)",
+            "👋 Khatam Bye Bye Tata",
+            "🔥 Jalwa Hai Hamara",
+            "🕶️ Arpit Bala (Bhai Tu Hai Kaun)",
+            "🕺 Tunak Tunak Tun (Viral Beat)",
+            "😈 Akshay Kumar Laugh (Hehehe)",
+            "👓 Baburao (Utha Le Re Deva)",
+            "🥊 R2H - Abe Saale!",
+            "😱 R2H - Scream (Kya Kar Raha Hai)",
+            "🏃 R2H - Bhaago Bhaago!"
         )
         val options = arrayOf(
             "🎨 Change Theme",
