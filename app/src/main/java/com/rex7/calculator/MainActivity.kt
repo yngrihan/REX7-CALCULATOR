@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var lcdBorderLayout: LinearLayout
     private lateinit var lcdScreen: LinearLayout
     private lateinit var scrollExpression: HorizontalScrollView
-    private lateinit var expressionContainer: LinearLayout
+    private lateinit var expressionContainer: View
     private lateinit var tvBrand: TextView
     private lateinit var tvLcdClock: TextView
     private lateinit var btnCopy: TextView
