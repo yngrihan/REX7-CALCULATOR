@@ -8,7 +8,6 @@ import android.media.SoundPool
 import android.view.SoundEffectConstants
 import android.view.View
 import java.util.concurrent.Executors
-import kotlin.random.Random
 
 object SoundManager {
     private val executor = Executors.newFixedThreadPool(2)
@@ -16,32 +15,38 @@ object SoundManager {
     private val memeMap = HashMap<Int, Int>()
     private val loadedSounds = HashSet<Int>()
     private var isPoolLoaded = false
+    
+    // Track active stream to stop previous playback instantly
+    private var currentStreamId: Int = 0
 
     val memeKeys = listOf(
-        "sound_fahhh",               // 0 (Dialog: 8)
-        "sound_baap_re",              // 1 (Dialog: 9)
-        "sound_omg",                  // 2 (Dialog: 10)
-        "sound_vine_boom",            // 3 (Dialog: 11)
-        "sound_aayein",               // 4 (Dialog: 12)
-        "sound_emotional_damage",     // 5 (Dialog: 13)
-        "sound_suiii",                // 6 (Dialog: 14)
-        "sound_omg_laugh",            // 7 (Dialog: 15)
-        "sound_tudutanei",            // 8 (Dialog: 16)
-        "sound_moye_moye",            // 9 (Dialog: 17)
-        "sound_bruh",                 // 10 (Dialog: 18)
-        "sound_gareeb",               // 11 (Dialog: 19)
-        "sound_khatam",               // 12 (Dialog: 20)
-        "sound_jalwa",                // 13 (Dialog: 21)
-        "sound_arpit",                // 14 (Dialog: 22)
-        "sound_tunak",                // 15 (Dialog: 23)
-        "sound_akshay_laugh",         // 16 (Dialog: 24)
-        "sound_baburao",              // 17 (Dialog: 25)
-        "sound_r2h_abesaale",         // 18 (Dialog: 26)
-        "sound_r2h_scream",           // 19 (Dialog: 27)
-        "sound_r2h_bhaago",           // 20 (Dialog: 28)
-        "sound_vlog_funny",           // 21 (Dialog: 29)
-        "sound_main_hoon"             // 22 (Dialog: 30)
+        "sound_fahhh",
+        "sound_baap_re",
+        "sound_omg",
+        "sound_vine_boom",
+        "sound_aayein",
+        "sound_emotional_damage",
+        "sound_suiii",
+        "sound_omg_laugh",
+        "sound_tudutanei",
+        "sound_moye_moye",
+        "sound_bruh",
+        "sound_gareeb",
+        "sound_jaldi_hato",
+        "sound_khatam",
+        "sound_baigan",
+        "sound_jalwa",
+        "sound_arpit",
+        "sound_tunak",
+        "sound_akshay_laugh",
+        "sound_baburao",
+        "sound_tu_kaun",
+        "sound_r2h_abesaale",
+        "sound_vlog_beat",
+        "sound_main_hoon"
     )
+
+    private val indianIndices = listOf(1, 4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
 
     fun initPool(context: Context) {
         if (isPoolLoaded) return
@@ -71,23 +76,22 @@ object SoundManager {
         isPoolLoaded = true
     }
 
+    private fun playSingleSound(sp: SoundPool, soundId: Int) {
+        // Naya sound chalane se pehle purana ruk jayega
+        if (currentStreamId != 0) {
+            sp.stop(currentStreamId)
+        }
+        currentStreamId = sp.play(soundId, 1f, 1f, 1, 0, 1f)
+    }
+
     fun play(context: Context, view: View, soundIndex: Int, isSoundEnabled: Boolean, isEquals: Boolean = false) {
         if (!isSoundEnabled) return
         initPool(context)
         val sp = soundPool ?: return
 
-        if (isEquals && soundIndex >= 7) {
-            val khatamId = memeMap[12]
-            val jalwaId = memeMap[13]
-            val targetId = if (Random.nextBoolean() && jalwaId != null && loadedSounds.contains(jalwaId)) jalwaId else khatamId
-            if (targetId != null && loadedSounds.contains(targetId)) {
-                sp.play(targetId, 1f, 1f, 1, 0, 1f)
-                return
-            }
-        }
-
         when (soundIndex) {
             0 -> {
+                if (currentStreamId != 0) sp.stop(currentStreamId)
                 try { view.playSoundEffect(SoundEffectConstants.CLICK) } catch (_: Exception) {}
             }
             1 -> playTone(1200, 25, 0.6)
@@ -96,18 +100,31 @@ object SoundManager {
             4 -> playTone(280, 20, 0.7)
             5 -> playTone(1800, 35, 0.4)
             6 -> playTone(160, 25, 0.9)
+
+            // 7: Random Mix (Sab Memes)
             7 -> {
                 val available = memeMap.values.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
-                    val sId = available.random()
-                    sp.play(sId, 1f, 1f, 1, 0, 1f)
+                    playSingleSound(sp, available.random())
                 }
             }
-            in 8..30 -> {
-                val mappedIdx = soundIndex - 8
+
+            // 8: Desi Viral Mix
+            8 -> {
+                val available = indianIndices
+                    .mapNotNull { memeMap[it] }
+                    .filter { loadedSounds.contains(it) }
+                if (available.isNotEmpty()) {
+                    playSingleSound(sp, available.random())
+                }
+            }
+
+            // Single sounds
+            in 9..32 -> {
+                val mappedIdx = soundIndex - 9
                 val sId = memeMap[mappedIdx]
                 if (sId != null && loadedSounds.contains(sId)) {
-                    sp.play(sId, 1f, 1f, 1, 0, 1f)
+                    playSingleSound(sp, sId)
                 }
             }
         }
