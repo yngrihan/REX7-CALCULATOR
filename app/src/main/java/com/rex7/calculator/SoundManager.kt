@@ -18,17 +18,33 @@ object SoundManager {
     private var currentStreamId: Int = 0
 
     val memeKeys = listOf(
-        "sound_baburao",
-        "sound_arpit",
-        "sound_gareeb",
-        "sound_khatam",
-        "sound_jalwa",
-        "sound_akshay_laugh",
+        "sound_fahhh",
+        "sound_baap_re",
+        "sound_omg",
+        "sound_vine_boom",
+        "sound_aayein",
+        "sound_emotional_damage",
+        "sound_suiii",
+        "sound_omg_laugh",
+        "sound_tudutanei",
         "sound_moye_moye",
+        "sound_bruh",
+        "sound_gareeb",
+        "sound_jaldi_hato",
+        "sound_khatam",
+        "sound_baigan",
+        "sound_jalwa",
+        "sound_arpit",
+        "sound_tunak",
+        "sound_akshay_laugh",
+        "sound_baburao",
+        "sound_tu_kaun",
         "sound_r2h_abesaale",
-        "sound_vlog_funny",
+        "sound_vlog_beat",
         "sound_main_hoon"
     )
+
+    private val desiIndices = listOf(1, 4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
 
     fun initPool(context: Context) {
         if (isPoolLoaded) return
@@ -87,7 +103,6 @@ object SoundManager {
             5 -> playTone(1800, 35, 0.4)
             6 -> playTone(160, 25, 0.9)
 
-            // 7: Random Mix (All)
             7 -> {
                 val available = memeMap.values.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
@@ -95,16 +110,14 @@ object SoundManager {
                 }
             }
 
-            // 8: Desi Viral Mix
             8 -> {
-                val available = memeMap.values.filter { loadedSounds.contains(it) }
+                val available = desiIndices.mapNotNull { memeMap[it] }.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
                     playInstantSound(sp, available.random())
                 }
             }
 
-            // 9..18: 10 Exact Single Clean Memes
-            in 9..18 -> {
+            in 9 until 33 -> {
                 val mappedIdx = soundIndex - 9
                 val sId = memeMap[mappedIdx]
                 if (sId != null && loadedSounds.contains(sId)) {
