@@ -1,4 +1,6 @@
 package com.rex7.calculator
+import android.media.AudioAttributes
+import android.media.SoundPool
 
 import android.app.AlertDialog
 import android.content.ClipData
@@ -24,6 +26,69 @@ import java.util.Locale
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+
+    private var soundPool: SoundPool? = null
+    private val memeSoundIds = mutableListOf<Int>()
+    private var equalsSoundId: Int = 0
+    private var currentStreamId: Int = 0
+    private var isMemeSoundEnabled: Boolean = true
+
+    private fun initMemeSounds() {
+        val prefs = getSharedPreferences("rex7_prefs", Context.MODE_PRIVATE)
+        isMemeSoundEnabled = prefs.getBoolean("pref_meme_sounds_enabled", true)
+
+        val audioAttributes = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(1)
+            .setAudioAttributes(audioAttributes)
+            .build()
+
+        val sp = soundPool ?: return
+
+        val soundNames = listOf("sound_fahhh", "sound_baap_re", "sound_omg", "sound_vine_boom", "sound_aayein", "sound_emotional_damage", "sound_done_bro")
+        memeSoundIds.clear()
+        soundNames.forEach { name ->
+            val resId = resources.getIdentifier(name, "raw", packageName)
+            if (resId != 0) {
+                try {
+                    val id = sp.load(this, resId, 1)
+                    if (id != 0) memeSoundIds.add(id)
+                } catch (_: Exception) {}
+            }
+        }
+
+        val eqResId = resources.getIdentifier("sound_suiii", "raw", packageName)
+        if (eqResId != 0) {
+            try { equalsSoundId = sp.load(this, eqResId, 1) } catch (_: Exception) {}
+        }
+    }
+
+    private fun playMemeSound(isEqualsKey: Boolean = false) {
+        if (!isMemeSoundEnabled) return
+        val sp = soundPool ?: return
+
+        if (currentStreamId != 0) {
+            sp.stop(currentStreamId)
+            currentStreamId = 0
+        }
+
+        val soundToPlay = if (isEqualsKey && equalsSoundId != 0) {
+            equalsSoundId
+        } else if (memeSoundIds.isNotEmpty()) {
+            memeSoundIds.random()
+        } else {
+            0
+        }
+
+        if (soundToPlay != 0) {
+            currentStreamId = sp.play(soundToPlay, 1.0f, 1.0f, 1, 0, 1.0f)
+        }
+    }
+
     private val bgExecutor = Executors.newSingleThreadExecutor()
     companion object {
         private const val PREFS_NAME = "calc_prefs"
@@ -127,8 +192,9 @@ class MainActivity : AppCompatActivity() {
         mainHandler.removeCallbacks(cursorRunnable)
     }
 
-    private fun triggerSound(view: View) {
-        SoundManager.play(this, view, currentSoundIndex, isSoundEnabled)
+    private fun triggerSound(v: View?) {
+        val isEquals = v?.id == R.id.btnEqual
+        playMemeSound(isEqualsKey = isEquals)
     }
 
     private fun collectAllButtons() {
