@@ -713,8 +713,6 @@ class MainActivity : AppCompatActivity() {
             tvResult.text = ""
             tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
         }
-    }
-    }
 
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener { v ->
             triggerSound(v)
@@ -871,4 +869,6 @@ class MainActivity : AppCompatActivity() {
             }
             .show()
     }
+}
+}
 }
