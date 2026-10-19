@@ -688,6 +688,7 @@ class MainActivity : AppCompatActivity() {
             if (isEvaluated) { currentInput.setLength(0); isEvaluated = false }
             handleSmartParen()
             updateLcdLive()
+        }
 
 
         findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener { v ->
@@ -869,6 +870,5 @@ class MainActivity : AppCompatActivity() {
             }
             .show()
     }
-}
 }
 }
