@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
 
         cursorRunnable = object : Runnable {
             override fun run() {
-                if (!isEvaluated && currentInput.isNotEmpty()) {
+                if (!isEvaluated) {
                     cursorVisible = !cursorVisible
                     cursorBar.visibility = if (cursorVisible) View.VISIBLE else View.INVISIBLE
                 } else {
@@ -133,8 +133,8 @@ class MainActivity : AppCompatActivity() {
             R.id.btn7, R.id.btn8, R.id.btn9, R.id.btnDivide,
             R.id.btn4, R.id.btn5, R.id.btn6, R.id.btnMultiply,
             R.id.btn1, R.id.btn2, R.id.btn3, R.id.btnMinus,
-            R.id.btnParenOpen, R.id.btn0, R.id.btnParenClose, R.id.btnPlus,
-            R.id.btnDot, R.id.btnEqual
+            R.id.btnParen, R.id.btn0, R.id.btnDot, R.id.btnPlus,
+            R.id.btnEqual
         )
         allButtons.clear()
         for (id in buttonIds) {
@@ -597,6 +597,63 @@ class MainActivity : AppCompatActivity() {
         updateLcdLive()
     }
 
+    private fun formatCommas(raw: String): String {
+        val sb = StringBuilder()
+        var i = 0
+        while (i < raw.length) {
+            if (raw[i].isDigit()) {
+                val start = i
+                while (i < raw.length && raw[i].isDigit()) i++
+                val num = raw.substring(start, i)
+                if (num.length <= 3) {
+                    sb.append(num)
+                } else {
+                    val last3 = num.substring(num.length - 3)
+                    var rem = num.substring(0, num.length - 3)
+                    val grps = mutableListOf<String>()
+                    while (rem.length > 2) {
+                        grps.add(0, rem.substring(rem.length - 2))
+                        rem = rem.substring(0, rem.length - 2)
+                    }
+                    if (rem.isNotEmpty()) grps.add(0, rem)
+                    sb.append(grps.joinToString(",") + "," + last3)
+                }
+            } else {
+                sb.append(raw[i])
+                i++
+            }
+        }
+        return sb.toString()
+    }
+
+    private fun handleSmartParen() {
+        if (isEvaluated) {
+            currentInput.setLength(0)
+            isEvaluated = false
+        }
+        val text = currentInput.toString()
+        var openCount = 0
+        var closeCount = 0
+        for (c in text) {
+            if (c == '(') openCount++
+            if (c == ')') closeCount++
+        }
+        if (text.isEmpty()) {
+            currentInput.append("(")
+        } else {
+            val last = text.last()
+            if (last.isDigit() || last == ')') {
+                if (openCount > closeCount) {
+                    currentInput.append(")")
+                } else {
+                    currentInput.append("×(")
+                }
+            } else {
+                currentInput.append("(")
+            }
+        }
+        updateLcdLive()
+    }
     private fun bindKeyActions() {
         val numberMap = listOf(
             R.id.btn0 to '0', R.id.btn1 to '1', R.id.btn2 to '2',
@@ -622,18 +679,13 @@ class MainActivity : AppCompatActivity() {
         findViewById<AppCompatButton>(R.id.btnDivide)?.setOnClickListener { v -> triggerSound(v); appendOperator('÷') }
         findViewById<AppCompatButton>(R.id.btnPercent)?.setOnClickListener { v -> triggerSound(v); appendOperator('%') }
 
-        findViewById<AppCompatButton>(R.id.btnParenOpen)?.setOnClickListener { v ->
+        findViewById<AppCompatButton>(R.id.btnParen)?.setOnClickListener { v ->
             triggerSound(v)
             if (isEvaluated) { currentInput.setLength(0); isEvaluated = false }
-            currentInput.append('(')
+            handleSmartParen()
             updateLcdLive()
         }
 
-        findViewById<AppCompatButton>(R.id.btnParenClose)?.setOnClickListener { v ->
-            triggerSound(v)
-            if (isEvaluated) isEvaluated = false
-            currentInput.append(')')
-            updateLcdLive()
         }
 
         findViewById<AppCompatButton>(R.id.btnToggleSign)?.setOnClickListener { v ->
