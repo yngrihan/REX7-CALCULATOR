@@ -717,6 +717,7 @@ class MainActivity : AppCompatActivity() {
             tvResult.text = ""
             tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
         }
+    }
 
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener { v ->
             triggerSound(v)
@@ -728,7 +729,8 @@ class MainActivity : AppCompatActivity() {
                 cursorBar.visibility = View.GONE
                 tvResult.text = ""
                 tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
-            } else if (currentInput.isNotEmpty()) {
+            }
+    } else if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateLcdLive()
             }
@@ -870,9 +872,7 @@ class MainActivity : AppCompatActivity() {
             }
             .setPositiveButton("Close", null)
             .setNegativeButton("Clear All") { _, _ ->
-                bgExecutor.execute(java.lang.Runnable { prefs.edit().remove(KEY_HISTORY).apply() })
+                bgExecutor.execute(object : Runnable { override fun run() { prefs.edit().remove(KEY_HISTORY).apply() } })
             }
             .show()
     }
-}
-}
