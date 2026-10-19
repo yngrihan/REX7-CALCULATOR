@@ -752,7 +752,7 @@ class MainActivity : AppCompatActivity() {
                 applySmartFontSize(ans)
 
                 scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
-                bgExecutor.execute { saveHistory(expr, ans) }
+                saveHistory(expr, ans)
             } else {
                 tvExpression.text = "Error"
                 cursorBar.visibility = View.GONE
@@ -869,7 +869,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             .setPositiveButton("Close", null)
-            .setNegativeButton("Clear All") { _, _ -> bgExecutor.execute { prefs.edit().remove(KEY_HISTORY).apply() } }
+            .setNegativeButton("Clear All") { _, _ -> bgExecutor.execute(Runnable { prefs.edit().remove(KEY_HISTORY).apply()
+            }) } }
             .show()
     }
 }
