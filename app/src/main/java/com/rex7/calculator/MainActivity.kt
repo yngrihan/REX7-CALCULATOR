@@ -743,10 +743,11 @@ class MainActivity : AppCompatActivity() {
                 currentInput.append(ans)
                 isEvaluated = true
 
-                tvExpression.text = ans
+                val displayAns = formatForDisplay(ans)
+                tvExpression.text = displayAns
                 cursorBar.visibility = View.GONE
                 tvResult.text = ""
-                applySmartFontSize(ans)
+                applySmartFontSize(displayAns)
 
                 scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
                 saveHistory(expr, ans)
@@ -776,6 +777,22 @@ class MainActivity : AppCompatActivity() {
         updateLcdLive()
     }
 
+
+    private fun formatForDisplay(input: String): String {
+        if (input.isEmpty() || input == "Error") return input
+        val regex = Regex("""\d+(\.\d*)?""")
+        return regex.replace(input) { matchResult ->
+            val numStr = matchResult.value
+            val parts = numStr.split(".")
+            val intPart = parts[0].reversed().chunked(3).joinToString(",").reversed()
+            if (parts.size > 1) {
+                "$intPart.${parts[1]}"
+            } else {
+                intPart
+            }
+        }
+    }
+
     private fun updateLcdLive() {
         val s = currentInput.toString()
         if (s.isEmpty()) {
@@ -786,16 +803,18 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        tvExpression.text = s
+        val displayExpr = formatForDisplay(s)
+        tvExpression.text = displayExpr
         cursorBar.visibility = View.VISIBLE
-        applySmartFontSize(s)
+        applySmartFontSize(displayExpr)
 
         scrollExpression.post { scrollExpression.fullScroll(HorizontalScrollView.FOCUS_RIGHT) }
 
         val preview = CalculationEngine.evaluate(s, isLivePreview = true)
         if (preview != null && preview != s) {
-            tvResult.text = preview
-            val resLen = preview.length
+            val displayPreview = formatForDisplay(preview)
+            tvResult.text = displayPreview
+            val resLen = displayPreview.length
             val resSp = when {
                 resLen <= 10 -> 26f
                 resLen <= 15 -> 22f
