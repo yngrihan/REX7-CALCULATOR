@@ -1,7 +1,4 @@
 package com.rex7.calculator
-import android.app.AlertDialog
-import android.content.Context
-import java.util.concurrent.Executors
 
 import android.app.AlertDialog
 import android.content.ClipData
@@ -51,7 +48,6 @@ class MainActivity : AppCompatActivity() {
     private val currentInput = StringBuilder(256)
     private var isEvaluated = false
     private var lastFullExpression = ""
-    private val bgExecutor = Executors.newSingleThreadExecutor()
 
     private val mainHandler = Handler(Looper.getMainLooper())
     private var cursorVisible = true
@@ -718,6 +714,7 @@ class MainActivity : AppCompatActivity() {
             tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
         }
     }
+    }
 
         findViewById<AppCompatButton>(R.id.btnDel)?.setOnClickListener { v ->
             triggerSound(v)
@@ -729,8 +726,7 @@ class MainActivity : AppCompatActivity() {
                 cursorBar.visibility = View.GONE
                 tvResult.text = ""
                 tvExpression.setTextSize(TypedValue.COMPLEX_UNIT_SP, 48f)
-            }
-    } else if (currentInput.isNotEmpty()) {
+            } else if (currentInput.isNotEmpty()) {
                 currentInput.deleteCharAt(currentInput.length - 1)
                 updateLcdLive()
             }
