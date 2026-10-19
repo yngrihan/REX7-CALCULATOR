@@ -756,6 +756,7 @@ class MainActivity : AppCompatActivity() {
                 tvResult.text = ""
             }
         }
+    }
 
     private fun appendOperator(op: Char) {
         if (isEvaluated) isEvaluated = false
@@ -870,5 +871,4 @@ class MainActivity : AppCompatActivity() {
             }
             .show()
     }
-}
 }
