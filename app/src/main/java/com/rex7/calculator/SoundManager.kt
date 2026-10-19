@@ -5,15 +5,16 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.media.SoundPool
+import android.util.Log
 import android.view.SoundEffectConstants
 import android.view.View
 import java.util.concurrent.Executors
 
 object SoundManager {
+    private const val TAG = "SoundManager"
     private val executor = Executors.newFixedThreadPool(2)
     private var soundPool: SoundPool? = null
     private val memeMap = HashMap<Int, Int>()
-    private val loadedSounds = HashSet<Int>()
     private var isPoolLoaded = false
     private var currentStreamId: Int = 0
 
@@ -48,38 +49,41 @@ object SoundManager {
 
     fun initPool(context: Context) {
         if (isPoolLoaded) return
-        val attrs = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_GAME)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .setFlags(AudioAttributes.FLAG_LOW_LATENCY)
-            .build()
-        val sp = SoundPool.Builder()
-            .setMaxStreams(8)
-            .setAudioAttributes(attrs)
-            .build()
+        try {
+            val attrs = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build()
+            val sp = SoundPool.Builder()
+                .setMaxStreams(10)
+                .setAudioAttributes(attrs)
+                .build()
 
-        sp.setOnLoadCompleteListener { _, sampleId, status ->
-            if (status == 0) {
-                loadedSounds.add(sampleId)
+            memeKeys.forEachIndexed { idx, name ->
+                val resId = context.resources.getIdentifier(name, "raw", context.packageName)
+                if (resId != 0) {
+                    val sId = sp.load(context, resId, 1)
+                    memeMap[idx] = sId
+                    Log.d(TAG, "Loaded sound [$idx]: $name -> sampleId: $sId")
+                } else {
+                    Log.e(TAG, "Resource NOT found: $name")
+                }
             }
+            soundPool = sp
+            isPoolLoaded = true
+        } catch (e: Exception) {
+            Log.e(TAG, "Error initializing SoundPool", e)
         }
-
-        memeKeys.forEachIndexed { idx, name ->
-            val resId = context.resources.getIdentifier(name, "raw", context.packageName)
-            if (resId != 0) {
-                val sId = sp.load(context, resId, 1)
-                memeMap[idx] = sId
-            }
-        }
-        soundPool = sp
-        isPoolLoaded = true
     }
 
     private fun playInstantSound(sp: SoundPool, soundId: Int) {
-        val oldStream = currentStreamId
-        currentStreamId = sp.play(soundId, 1f, 1f, 1, 0, 1f)
-        if (oldStream != 0) {
-            sp.stop(oldStream)
+        try {
+            if (currentStreamId != 0) {
+                sp.stop(currentStreamId)
+            }
+            currentStreamId = sp.play(soundId, 1f, 1f, 1, 0, 1f)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error playing soundId: $soundId", e)
         }
     }
 
@@ -104,14 +108,14 @@ object SoundManager {
             6 -> playTone(160, 25, 0.9)
 
             7 -> {
-                val available = memeMap.values.filter { loadedSounds.contains(it) }
+                val available = memeMap.values.filter { it > 0 }
                 if (available.isNotEmpty()) {
                     playInstantSound(sp, available.random())
                 }
             }
 
             8 -> {
-                val available = desiIndices.mapNotNull { memeMap[it] }.filter { loadedSounds.contains(it) }
+                val available = desiIndices.mapNotNull { memeMap[it] }.filter { it > 0 }
                 if (available.isNotEmpty()) {
                     playInstantSound(sp, available.random())
                 }
@@ -120,7 +124,7 @@ object SoundManager {
             in 9 until 33 -> {
                 val mappedIdx = soundIndex - 9
                 val sId = memeMap[mappedIdx]
-                if (sId != null && loadedSounds.contains(sId)) {
+                if (sId != null && sId > 0) {
                     playInstantSound(sp, sId)
                 }
             }

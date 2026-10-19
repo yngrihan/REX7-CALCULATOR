@@ -131,6 +131,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        SoundManager.initPool(this)
         setContentView(R.layout.activity_main)
 
         chassisLayout = findViewById(R.id.chassisLayout)
