@@ -870,8 +870,9 @@ class MainActivity : AppCompatActivity() {
             }
             .setPositiveButton("Close", null)
             .setNegativeButton("Clear All") { _, _ ->
-                bgExecutor.execute(Runnable { prefs.edit().remove(KEY_HISTORY).apply() })
+                bgExecutor.execute(java.lang.Runnable { prefs.edit().remove(KEY_HISTORY).apply() })
             }
             .show()
     }
+}
 }
