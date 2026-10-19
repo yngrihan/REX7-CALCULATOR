@@ -1,4 +1,7 @@
 package com.rex7.calculator
+import android.app.AlertDialog
+import android.content.Context
+import java.util.concurrent.Executors
 
 import android.app.AlertDialog
 import android.content.ClipData
@@ -24,6 +27,11 @@ import java.util.Locale
 import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
+    private val bgExecutor = Executors.newSingleThreadExecutor()
+    companion object {
+        private const val PREFS_NAME = "calc_prefs"
+        private const val KEY_HISTORY = "history_entries"
+    }
 
     private lateinit var chassisLayout: LinearLayout
     private lateinit var lcdBorderLayout: LinearLayout
