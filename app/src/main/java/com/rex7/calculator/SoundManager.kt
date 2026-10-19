@@ -18,32 +18,24 @@ object SoundManager {
 
     val memeKeys = listOf(
         "sound_fahhh",
-        "sound_baap_re",
         "sound_omg",
         "sound_vine_boom",
-        "sound_aayein",
         "sound_emotional_damage",
         "sound_suiii",
         "sound_omg_laugh",
-        "sound_tudutanei",
         "sound_moye_moye",
         "sound_bruh",
         "sound_gareeb",
-        "sound_jaldi_hato",
         "sound_khatam",
-        "sound_baigan",
-        "sound_jalwa",
         "sound_arpit",
         "sound_tunak",
-        "sound_akshay_laugh",
         "sound_baburao",
         "sound_tu_kaun",
-        "sound_r2h_abesaale",
         "sound_vlog_beat",
         "sound_main_hoon"
     )
 
-    private val desiIndices = listOf(1, 4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
+    private val desiIndices = listOf(8, 9, 10, 11, 12, 13, 14, 15)
 
     fun initPool(context: Context) {
         if (isPoolLoaded) return
@@ -110,7 +102,7 @@ object SoundManager {
                 }
             }
 
-            in 9 until 33 -> {
+            in 9 until 25 -> {
                 val mappedIdx = soundIndex - 9
                 val sId = memeMap[mappedIdx]
                 if (sId != null && sId > 0) {
