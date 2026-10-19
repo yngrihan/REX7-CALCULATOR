@@ -274,7 +274,19 @@ class MainActivity : AppCompatActivity() {
             "4. Soft Bubble Pop",
             "5. Typewriter Clack",
             "6. Digital Bip",
-            "7. Subtle Wood Tap"
+            "7. Subtle Wood Tap",
+            "🎲 Random Mix (All Memes)",
+            "💀 FAHHH",
+            "😱 Are Baap Re!",
+            "😲 Oh My God!",
+            "💥 Vine Boom",
+            "❓ Aayein?",
+            "💔 Emotional Damage",
+            "⚽ SUIIIII",
+            "🤣 OMG Ha Ha Ha",
+            "🎵 Tu Du Ta Nei",
+            "🗿 Moye Moye",
+            "💀 Bruh"
         )
         val options = arrayOf(
             "🎨 Change Theme",
