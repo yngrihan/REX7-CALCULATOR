@@ -290,15 +290,12 @@ class MainActivity : AppCompatActivity() {
             "💀 Bruh",
             "🥺 Mujhe Maaf Kardo",
             "🏃 Jaldi Wahan Se Hato",
-            "👋 Khatam Tata Bye Bye",
             "🍆 Baigan",
-            "🔥 Jalwa Hai Hamara",
             "🕶️ Bhai Yaha Kya Ho Raha Hai",
             "🕺 Tunak Tunak Tun",
             "😈 Akshay Kumar Laugh",
             "👓 Baburao Utha Le Re",
             "🥊 Abe Tu Kaun Hai",
-            "🥊 Abe Saale",
             "🥁 Dhinka Chika",
             "😎 Main Hoon Bhai"
         )

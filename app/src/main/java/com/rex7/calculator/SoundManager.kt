@@ -15,8 +15,6 @@ object SoundManager {
     private val memeMap = HashMap<Int, Int>()
     private val loadedSounds = HashSet<Int>()
     private var isPoolLoaded = false
-    
-    // Track active stream to stop previous playback instantly
     private var currentStreamId: Int = 0
 
     val memeKeys = listOf(
@@ -32,21 +30,18 @@ object SoundManager {
         "sound_moye_moye",
         "sound_bruh",
         "sound_gareeb",
-        "sound_jaldi_hato",
         "sound_khatam",
-        "sound_baigan",
         "sound_jalwa",
         "sound_arpit",
         "sound_tunak",
         "sound_akshay_laugh",
         "sound_baburao",
-        "sound_tu_kaun",
         "sound_r2h_abesaale",
-        "sound_vlog_beat",
+        "sound_vlog_funny",
         "sound_main_hoon"
     )
 
-    private val indianIndices = listOf(1, 4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23)
+    private val desiIndices = listOf(1, 4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
 
     fun initPool(context: Context) {
         if (isPoolLoaded) return
@@ -55,7 +50,7 @@ object SoundManager {
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
             .build()
         val sp = SoundPool.Builder()
-            .setMaxStreams(4)
+            .setMaxStreams(6)
             .setAudioAttributes(attrs)
             .build()
 
@@ -77,7 +72,6 @@ object SoundManager {
     }
 
     private fun playSingleSound(sp: SoundPool, soundId: Int) {
-        // Naya sound chalane se pehle purana ruk jayega
         if (currentStreamId != 0) {
             sp.stop(currentStreamId)
         }
@@ -101,7 +95,7 @@ object SoundManager {
             5 -> playTone(1800, 35, 0.4)
             6 -> playTone(160, 25, 0.9)
 
-            // 7: Random Mix (Sab Memes)
+            // Mix Mode 1: Random Mix (All)
             7 -> {
                 val available = memeMap.values.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
@@ -109,18 +103,16 @@ object SoundManager {
                 }
             }
 
-            // 8: Desi Viral Mix
+            // Mix Mode 2: Desi Viral Mix
             8 -> {
-                val available = indianIndices
-                    .mapNotNull { memeMap[it] }
-                    .filter { loadedSounds.contains(it) }
+                val available = desiIndices.mapNotNull { memeMap[it] }.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
                     playSingleSound(sp, available.random())
                 }
             }
 
-            // Single sounds
-            in 9..32 -> {
+            // Individual Memes (1-to-1 exact)
+            in 9 until 30 -> {
                 val mappedIdx = soundIndex - 9
                 val sId = memeMap[mappedIdx]
                 if (sId != null && loadedSounds.contains(sId)) {
