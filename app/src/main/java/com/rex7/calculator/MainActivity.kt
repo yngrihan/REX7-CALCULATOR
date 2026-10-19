@@ -286,7 +286,6 @@ class MainActivity : AppCompatActivity() {
             "🤣 OMG Laugh",
             "🐱 Cat Laughing",
             "💀 Bruh",
-            "🗿 Moye Moye",
             "🕺 Tunak Tunak Tun",
             "🎯 Le Beta",
             "🥊 Abe Tu Kaun Hai",
