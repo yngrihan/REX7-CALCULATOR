@@ -18,39 +18,27 @@ object SoundManager {
     private var currentStreamId: Int = 0
 
     val memeKeys = listOf(
-        "sound_fahhh",
-        "sound_baap_re",
-        "sound_omg",
-        "sound_vine_boom",
-        "sound_aayein",
-        "sound_emotional_damage",
-        "sound_suiii",
-        "sound_omg_laugh",
-        "sound_tudutanei",
-        "sound_moye_moye",
-        "sound_bruh",
+        "sound_baburao",
+        "sound_arpit",
         "sound_gareeb",
         "sound_khatam",
         "sound_jalwa",
-        "sound_arpit",
-        "sound_tunak",
         "sound_akshay_laugh",
-        "sound_baburao",
+        "sound_moye_moye",
         "sound_r2h_abesaale",
         "sound_vlog_funny",
         "sound_main_hoon"
     )
-
-    private val desiIndices = listOf(1, 4, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20)
 
     fun initPool(context: Context) {
         if (isPoolLoaded) return
         val attrs = AudioAttributes.Builder()
             .setUsage(AudioAttributes.USAGE_GAME)
             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setFlags(AudioAttributes.FLAG_LOW_LATENCY)
             .build()
         val sp = SoundPool.Builder()
-            .setMaxStreams(6)
+            .setMaxStreams(8)
             .setAudioAttributes(attrs)
             .build()
 
@@ -71,11 +59,12 @@ object SoundManager {
         isPoolLoaded = true
     }
 
-    private fun playSingleSound(sp: SoundPool, soundId: Int) {
-        if (currentStreamId != 0) {
-            sp.stop(currentStreamId)
-        }
+    private fun playInstantSound(sp: SoundPool, soundId: Int) {
+        val oldStream = currentStreamId
         currentStreamId = sp.play(soundId, 1f, 1f, 1, 0, 1f)
+        if (oldStream != 0) {
+            sp.stop(oldStream)
+        }
     }
 
     fun play(context: Context, view: View, soundIndex: Int, isSoundEnabled: Boolean, isEquals: Boolean = false) {
@@ -85,7 +74,10 @@ object SoundManager {
 
         when (soundIndex) {
             0 -> {
-                if (currentStreamId != 0) sp.stop(currentStreamId)
+                if (currentStreamId != 0) {
+                    sp.stop(currentStreamId)
+                    currentStreamId = 0
+                }
                 try { view.playSoundEffect(SoundEffectConstants.CLICK) } catch (_: Exception) {}
             }
             1 -> playTone(1200, 25, 0.6)
@@ -95,28 +87,28 @@ object SoundManager {
             5 -> playTone(1800, 35, 0.4)
             6 -> playTone(160, 25, 0.9)
 
-            // Mix Mode 1: Random Mix (All)
+            // 7: Random Mix (All)
             7 -> {
                 val available = memeMap.values.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
-                    playSingleSound(sp, available.random())
+                    playInstantSound(sp, available.random())
                 }
             }
 
-            // Mix Mode 2: Desi Viral Mix
+            // 8: Desi Viral Mix
             8 -> {
-                val available = desiIndices.mapNotNull { memeMap[it] }.filter { loadedSounds.contains(it) }
+                val available = memeMap.values.filter { loadedSounds.contains(it) }
                 if (available.isNotEmpty()) {
-                    playSingleSound(sp, available.random())
+                    playInstantSound(sp, available.random())
                 }
             }
 
-            // Individual Memes (1-to-1 exact)
-            in 9 until 30 -> {
+            // 9..18: 10 Exact Single Clean Memes
+            in 9..18 -> {
                 val mappedIdx = soundIndex - 9
                 val sId = memeMap[mappedIdx]
                 if (sId != null && loadedSounds.contains(sId)) {
-                    playSingleSound(sp, sId)
+                    playInstantSound(sp, sId)
                 }
             }
         }
