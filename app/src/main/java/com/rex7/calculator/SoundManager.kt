@@ -4,17 +4,68 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import android.media.SoundPool
 import android.view.SoundEffectConstants
 import android.view.View
 import java.util.concurrent.Executors
+import kotlin.random.Random
 
 object SoundManager {
     private val executor = Executors.newFixedThreadPool(2)
+    private var soundPool: SoundPool? = null
+    private val memeMap = HashMap<Int, Int>()
+    private var isPoolLoaded = false
 
-    fun play(context: Context, view: View, soundIndex: Int, isSoundEnabled: Boolean) {
+    private val memeKeys = listOf(
+        "sound_fahhh",
+        "sound_baap_re",
+        "sound_omg",
+        "sound_vine_boom",
+        "sound_aayein",
+        "sound_emotional_damage",
+        "sound_suiii",
+        "sound_omg_laugh",
+        "sound_tudutanei",
+        "sound_moye_moye",
+        "sound_bruh"
+    )
+
+    fun initPool(context: Context) {
+        if (isPoolLoaded) return
+        val attrs = AudioAttributes.Builder()
+            .setUsage(AudioAttributes.USAGE_GAME)
+            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .build()
+        soundPool = SoundPool.Builder()
+            .setMaxStreams(2)
+            .setAudioAttributes(attrs)
+            .build()
+
+        memeKeys.forEachIndexed { idx, name ->
+            val resId = context.resources.getIdentifier(name, "raw", context.packageName)
+            if (resId != 0) {
+                val soundId = soundPool?.load(context, resId, 1) ?: 0
+                if (soundId != 0) memeMap[idx] = soundId
+            }
+        }
+        isPoolLoaded = true
+    }
+
+    fun play(context: Context, view: View, soundIndex: Int, isSoundEnabled: Boolean, isEquals: Boolean = false) {
         if (!isSoundEnabled) return
+        initPool(context)
+
+        // Agar '=' button daba ho aur koi meme mode on ho, to suiii sound play karein
+        if (isEquals && soundIndex >= 7) {
+            val suiiiId = memeMap[6] // index 6 is sound_suiii
+            if (suiiiId != null && suiiiId != 0) {
+                soundPool?.play(suiiiId, 1f, 1f, 1, 0, 1f)
+                return
+            }
+        }
 
         when (soundIndex) {
+            // --- Purane 7 Classic Sounds ---
             0 -> {
                 try { view.playSoundEffect(SoundEffectConstants.CLICK) } catch (_: Exception) {}
             }
@@ -24,6 +75,22 @@ object SoundManager {
             4 -> playTone(280, 20, 0.7)  // Typewriter Clack
             5 -> playTone(1800, 35, 0.4) // Digital Bip
             6 -> playTone(160, 25, 0.9)  // Subtle Wood Tap
+
+            // --- 7: Random Mix (All Memes) ---
+            7 -> {
+                if (memeMap.isNotEmpty()) {
+                    val randomKey = memeMap.keys.random()
+                    val sId = memeMap[randomKey] ?: 0
+                    if (sId != 0) soundPool?.play(sId, 1f, 1f, 1, 0, 1f)
+                }
+            }
+
+            // --- 8..18: Individual Specific Memes ---
+            in 8..18 -> {
+                val mappedIdx = soundIndex - 8
+                val sId = memeMap[mappedIdx] ?: 0
+                if (sId != 0) soundPool?.play(sId, 1f, 1f, 1, 0, 1f)
+            }
         }
     }
 

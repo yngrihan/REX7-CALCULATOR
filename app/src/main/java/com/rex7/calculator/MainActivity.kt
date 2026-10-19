@@ -194,7 +194,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun triggerSound(v: View?) {
         val isEquals = v?.id == R.id.btnEqual
-        playMemeSound(isEqualsKey = isEquals)
+        SoundManager.play(this, v ?: tvExpression, currentSoundIndex, isSoundEnabled, isEquals = isEquals)
     }
 
     private fun collectAllButtons() {
